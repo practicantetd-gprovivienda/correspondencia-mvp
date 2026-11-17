@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f2a4a">
+  <meta name="description" content="Sistema de Trazabilidad y Gestión de Correspondencia · Grupo Provivienda">
+  <title>Correspondencia · Grupo Provivienda</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'Consolas', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171',
+              500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#991b1b'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer components {
+      .card        { @apply bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6; }
+      .label       { @apply block text-sm font-medium text-slate-700 mb-1.5; }
+      .input       { @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] text-slate-900 placeholder-slate-400 shadow-sm transition focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100; }
+      .input-error { @apply border-red-400 ring-4 ring-red-100; }
+      .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60; }
+      .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60; }
+      .chip        { @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700; }
+      .step-title  { @apply mb-4 flex items-center gap-2.5 text-base font-semibold text-slate-900; }
+      .step-num    { @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white; }
+      .seg         { @apply inline-flex w-full gap-1 rounded-xl bg-slate-100 p-1 md:w-auto; }
+      .seg > button { @apply flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 md:flex-none aria-pressed:bg-white aria-pressed:text-slate-900 aria-pressed:shadow-sm; }
+      .tipo-card   { @apply flex w-full items-start gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-brand-300 aria-pressed:border-brand-600 aria-pressed:bg-brand-50 aria-pressed:ring-4 aria-pressed:ring-brand-100; }
+    }
+  </style>
+  <style>
+    .spinner { width: 1.05em; height: 1.05em; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 9999px; display: inline-block; animation: spin .7s linear infinite; vertical-align: -0.18em; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-in { animation: fadeIn .22s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .pop-in { animation: popIn .35s cubic-bezier(.2,1.4,.4,1); }
+    @keyframes popIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { scrollbar-width: none; }
+    input[type="search"]::-webkit-search-cancel-button { cursor: pointer; }
+    .skeleton { background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 50%, #eef2f6 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+  </style>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body class="min-h-screen bg-slate-100 font-sans text-slate-800 antialiased">
+
+  <!-- ===================================================================== -->
+  <!--  LOGIN                                                                -->
+  <!-- ===================================================================== -->
+  <div id="view-login" class="hidden min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 p-4">
+    <div class="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl sm:p-10 fade-in">
+      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-3xl">📦</div>
+      <h1 class="mt-5 text-2xl font-bold text-slate-900">Gestión de Correspondencia</h1>
+      <p class="text-sm font-semibold text-brand-600">Grupo Provivienda</p>
+      <p class="mt-4 text-sm leading-relaxed text-slate-600">Registra, rastrea y entrega la correspondencia de la empresa con trazabilidad completa: foto, código único, fechas y ubicación GPS.</p>
+      <div id="gis-button" class="mt-8 flex min-h-[44px] justify-center"></div>
+      <p id="login-error" class="mt-5 hidden rounded-xl bg-red-50 p-3 text-sm text-red-700"></p>
+      <p class="mt-6 text-xs text-slate-400">Acceso exclusivo con tu cuenta corporativa <span id="login-domain" class="font-medium text-slate-500"></span></p>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!--  APLICACIÓN                                                           -->
+  <!-- ===================================================================== -->
+  <div id="view-app" class="hidden">
+
+    <!-- Cabecera -->
+    <header class="sticky top-0 z-30 bg-brand-800 text-white shadow-lg shadow-brand-900/20">
+      <div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl">📦</div>
+          <div class="min-w-0 leading-tight">
+            <div class="truncate text-[15px] font-bold">Correspondencia</div>
+            <div class="truncate text-xs text-blue-200">
+              <span class="xl:hidden" id="user-email-mobile"></span>
+              <span class="hidden xl:inline">Grupo Provivienda</span>
+            </div>
+          </div>
+        </div>
+
+        <nav id="nav-desktop" role="tablist" class="ml-6 hidden items-center gap-1 lg:flex"></nav>
+
+        <div class="ml-auto flex items-center gap-3">
+          <div class="hidden text-right leading-tight xl:block">
+            <div id="user-name" class="max-w-[220px] truncate text-sm font-semibold"></div>
+            <div id="user-email" class="max-w-[220px] truncate text-xs text-blue-200"></div>
+          </div>
+          <img id="user-avatar" alt="" referrerpolicy="no-referrer" class="hidden h-9 w-9 rounded-full object-cover ring-2 ring-white/30">
+          <div id="user-initials" class="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-sm font-bold ring-2 ring-white/30"></div>
+          <button id="btn-logout" type="button" title="Cerrar sesión" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-blue-100 transition hover:bg-white/10 hover:text-white">
+            <span data-ico="logout" data-cls="h-4 w-4"></span><span class="hidden sm:inline">Cerrar sesión</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12">
+
+      <!-- Aviso de configuración / errores de datos -->
+      <div id="banner" class="mb-5 hidden"></div>
+
+      <!-- ================================================================= -->
+      <!--  TAB 1 · NUEVO ENVÍO                                              -->
+      <!-- ================================================================= -->
+      <section data-tab-panel="nuevo" class="hidden">
+        <div class="grid gap-6 lg:grid-cols-3">
+          <div class="lg:col-span-2">
+
+            <div id="nuevo-form-wrap">
+              <div class="mb-5">
+                <h2 class="text-2xl font-bold text-slate-900">Registrar nuevo envío</h2>
+                <p class="mt-1 text-sm text-slate-500">Complete los datos. Al finalizar recibirá un código de 5 dígitos para rotular el paquete o sobre.</p>
+              </div>
+
+              <form id="form-envio" novalidate class="space-y-5">
+
+                <!-- Paso 1 · Tipo -->
+                <div class="card">
+                  <h3 class="step-title"><span class="step-num">1</span>Tipo de mensajería</h3>
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <button type="button" class="tipo-card" data-tipo="Interna (Grupo Provivienda)" aria-pressed="true">
+                      <span class="text-2xl">🏢</span>
+                      <span>
+                        <span class="block font-semibold text-slate-900">Interna (Grupo Provivienda)</span>
+                        <span class="mt-0.5 block text-xs leading-relaxed text-slate-500">Entre la oficina principal y otras sedes o proyectos de la empresa.</span>
+                      </span>
+                    </button>
+                    <button type="button" class="tipo-card" data-tipo="Externa" aria-pressed="false">
+                      <span class="text-2xl">🌐</span>
+                      <span>
+                        <span class="block font-semibold text-slate-900">Externa</span>
+                        <span class="mt-0.5 block text-xs leading-relaxed text-slate-500">Hacia o desde empresas o personas ajenas a la empresa.</span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Paso 2 · Destinatario / Proveedor -->
+                <div class="card">
+                  <h3 class="step-title"><span class="step-num">2</span><span id="paso2-titulo">Destinatario</span></h3>
+
+                  <!-- Interna: recientes + buscador -->
+                  <div id="bloque-interna" class="space-y-4">
+                    <div id="recientes-wrap" class="hidden">
+                      <p class="label">Destinatarios recientes</p>
+                      <div id="recientes" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="relative">
+                      <label class="label" for="buscador">Buscar en el directorio</label>
+                      <div class="relative">
+                        <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
+                        <input id="buscador" type="search" autocomplete="off" spellcheck="false" placeholder="Nombre, correo o departamento…" class="input pl-11" role="combobox" aria-expanded="false" aria-controls="resultados" aria-autocomplete="list">
+                      </div>
+                      <ul id="resultados" role="listbox" class="absolute z-20 mt-1.5 hidden max-h-80 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"></ul>
+                      <p id="dir-info" class="mt-1.5 text-xs text-slate-400"></p>
+                    </div>
+                  </div>
+
+                  <!-- Externa: proveedor -->
+                  <div id="bloque-externa" class="hidden grid gap-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4 sm:grid-cols-2">
+                    <div>
+                      <label class="label" for="nombreProveedor">Nombre del proveedor <span class="text-red-500">*</span></label>
+                      <input id="nombreProveedor" type="text" maxlength="150" autocomplete="organization" placeholder="Ej. DHL, Notaría Quinta…" class="input">
+                    </div>
+                    <div>
+                      <label class="label" for="correoProveedor">Correo del proveedor <span class="font-normal text-slate-400">(opcional)</span></label>
+                      <input id="correoProveedor" type="email" inputmode="email" autocomplete="off" placeholder="proveedor@empresa.com" class="input">
+                    </div>
+                    <p class="text-xs text-amber-800 sm:col-span-2">Indique abajo la persona de contacto asociada al envío.</p>
+                  </div>
+
+                  <!-- Datos del destinatario (comunes) -->
+                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label class="label" for="nombreDestinatario">Nombre del destinatario <span class="text-red-500">*</span></label>
+                      <input id="nombreDestinatario" type="text" maxlength="150" autocomplete="off" class="input">
+                    </div>
+                    <div>
+                      <label class="label" for="correoDestinatario">Correo del destinatario <span class="text-red-500">*</span></label>
+                      <input id="correoDestinatario" type="email" inputmode="email" autocomplete="off" class="input">
+                    </div>
+                    <div class="sm:col-span-2">
+                      <label class="label" for="departamento">Departamento / Proyecto</label>
+                      <input id="departamento" type="text" maxlength="150" list="lista-deptos" autocomplete="off" placeholder="Se completa al elegir un contacto (puede editarlo)" class="input">
+                      <datalist id="lista-deptos"></datalist>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Paso 3 · Detalle y foto -->
+                <div class="card">
+                  <h3 class="step-title"><span class="step-num">3</span>Detalle y evidencia fotográfica</h3>
+
+                  <label class="label" for="descripcion">Descripción de la correspondencia <span class="text-red-500">*</span></label>
+                  <div id="desc-chips" class="mb-2.5 flex flex-wrap gap-2"></div>
+                  <textarea id="descripcion" rows="3" maxlength="2000" placeholder="¿Qué se envía? Ej. Contrato firmado de compraventa, lote 14…" class="input resize-y"></textarea>
+
+                  <div class="mt-5">
+                    <p class="label">Fotografía del paquete <span class="font-normal text-slate-400">(recomendada para identificarlo)</span></p>
+                    <div id="foto-vacia" class="grid gap-3 sm:grid-cols-2">
+                      <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/60 px-4 py-5 text-sm font-semibold text-brand-700 transition hover:border-brand-400 hover:bg-brand-50">
+                        <input id="foto-camara" type="file" accept="image/*" capture="environment" class="sr-only">
+                        <span data-ico="camera" data-cls="h-5 w-5"></span> Tomar foto
+                      </label>
+                      <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:bg-slate-100">
+                        <input id="foto-archivo" type="file" accept="image/*" class="sr-only">
+                        <span data-ico="upload" data-cls="h-5 w-5"></span> Subir imagen
+                      </label>
+                    </div>
+                    <div id="foto-procesando" class="hidden items-center gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+                      <span class="spinner text-brand-600"></span> Comprimiendo imagen…
+                    </div>
+                    <div id="foto-preview" class="hidden items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <img id="foto-img" alt="Vista previa" class="h-24 w-24 rounded-lg object-cover ring-1 ring-slate-200">
+                      <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-slate-800">Foto lista para enviar</p>
+                        <p id="foto-info" class="text-xs text-slate-500"></p>
+                      </div>
+                      <button id="foto-quitar" type="button" class="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="Quitar foto">
+                        <span data-ico="x" data-cls="h-5 w-5"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"></div>
+
+                <button id="btn-enviar" type="submit" class="btn-primary w-full py-4 text-base">
+                  Registrar envío
+                </button>
+              </form>
+            </div>
+
+            <!-- Confirmación -->
+            <div id="nuevo-confirmacion" class="hidden"></div>
+          </div>
+
+          <!-- Lateral -->
+          <aside class="space-y-5">
+            <div class="card">
+              <h3 class="font-semibold text-slate-900">¿Cómo funciona?</h3>
+              <ol class="mt-4 space-y-3 text-sm text-slate-600">
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs">📝</span><span><b class="text-slate-800">Registrado:</b> usted crea el envío y obtiene el código.</span></li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs">📥</span><span><b class="text-slate-800">Recibido:</b> Archivo o el conductor toma el paquete.</span></li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-50 text-xs">🚚</span><span><b class="text-slate-800">En Camino:</b> sale a ruta; el destinatario recibe aviso.</span></li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs">✅</span><span><b class="text-slate-800">Entregado:</b> se calcula la duración y se notifica a ambos.</span></li>
+              </ol>
+            </div>
+            <div class="card">
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold text-slate-900">Mis últimos registros</h3>
+                <button type="button" data-tab="rastreo" class="text-xs font-semibold text-brand-600 hover:underline">Ver todos</button>
+              </div>
+              <div id="aside-recientes" class="mt-3 space-y-2"></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!--  TAB 2 · PANEL OPERADOR / CONDUCTOR (solo ADMIN_EMAILS)           -->
+      <!-- ================================================================= -->
+      <section data-tab-panel="panel" class="hidden">
+        <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Panel Operador / Conductor</h2>
+            <p class="mt-1 text-sm text-slate-500">Actualice el estado de cada paquete. Se guarda fecha, hora y ubicación GPS.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-2 sm:flex">
+            <button type="button" data-refresh class="btn-secondary">
+              <span data-ico="refresh" data-cls="h-4 w-4"></span> Actualizar lista
+            </button>
+            <button type="button" id="btn-sync" class="btn-primary">🔄 Sincronizar Contactos</button>
+          </div>
+        </div>
+
+        <div id="panel-stats" class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
+
+        <div class="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:items-center">
+          <div class="relative flex-1">
+            <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
+            <input id="panel-search" type="search" autocomplete="off" placeholder="Código de 5 dígitos, destinatario o departamento…" class="input pl-11">
+          </div>
+          <div class="seg" id="panel-seg">
+            <button type="button" data-panel-filter="activos" aria-pressed="true">Activos</button>
+            <button type="button" data-panel-filter="entregados" aria-pressed="false">Entregados</button>
+            <button type="button" data-panel-filter="todos" aria-pressed="false">Todos</button>
+          </div>
+        </div>
+
+        <div id="panel-list" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+        <div id="panel-more" class="mt-6 text-center"></div>
+      </section>
+
+      <!-- ================================================================= -->
+      <!--  TAB 3 · MIS ENVÍOS (RASTREO)                                     -->
+      <!-- ================================================================= -->
+      <section data-tab-panel="rastreo" class="hidden">
+        <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Mis Envíos</h2>
+            <p class="mt-1 text-sm text-slate-500">Correspondencia enviada por usted o dirigida a usted.</p>
+          </div>
+          <button type="button" data-refresh class="btn-secondary self-start sm:self-auto">
+            <span data-ico="refresh" data-cls="h-4 w-4"></span> Actualizar
+          </button>
+        </div>
+
+        <div class="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:items-center">
+          <div class="relative flex-1">
+            <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
+            <input id="rastreo-search" type="search" autocomplete="off" placeholder="Código, estado o palabra clave…" class="input pl-11">
+          </div>
+          <div class="seg no-scrollbar overflow-x-auto" id="rastreo-seg">
+            <button type="button" data-rastreo-filter="todos" aria-pressed="true">Todos</button>
+            <button type="button" data-rastreo-filter="enviados" aria-pressed="false">Enviados por mí</button>
+            <button type="button" data-rastreo-filter="recibidos" aria-pressed="false">Para mí</button>
+          </div>
+        </div>
+
+        <div id="rastreo-list" class="space-y-8"></div>
+      </section>
+    </main>
+
+    <!-- Navegación inferior (móvil) -->
+    <nav id="nav-mobile" class="pb-safe fixed inset-x-0 bottom-0 z-30 grid border-t border-slate-200 bg-white/95 backdrop-blur lg:hidden"></nav>
+  </div>
+
+  <!-- Visor de fotos -->
+  <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <button type="button" data-close-lightbox class="absolute right-4 top-4 rounded-full bg-white/10 p-2.5 text-white transition hover:bg-white/20" title="Cerrar">
+      <span data-ico="x" data-cls="h-6 w-6"></span>
+    </button>
+    <figure class="flex max-h-full max-w-4xl flex-col items-center">
+      <img id="lightbox-img" alt="Foto de la correspondencia" referrerpolicy="no-referrer" class="max-h-[80vh] w-auto rounded-xl bg-white/5 object-contain shadow-2xl">
+      <figcaption id="lightbox-caption" class="mt-3 text-center text-sm font-medium text-white/80"></figcaption>
+    </figure>
+  </div>
+
+  <!-- Notificaciones -->
+  <div id="toasts" class="pointer-events-none fixed inset-x-0 bottom-20 z-[60] flex flex-col items-center gap-2 px-4 lg:bottom-auto lg:left-auto lg:right-4 lg:top-20 lg:items-end"></div>
+
+
+  <script>
+  'use strict';
+
+  /* ==========================================================================
+   *  CONFIGURACIÓN  ·  edite estas tres constantes
+   * ======================================================================== */
+
+  /** URL de la Web App de Google Apps Script (termina en /exec).
+   *  Apps Script → Implementar → Gestionar implementaciones → copiar "URL de la aplicación web". */
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6KuEiUA_o61FJlYtDOttxWIS7zxnXC_XNUK7jOb2hVchho_s4_guIeCAM8xJtf0eS/exec';
+
+  /** ID de cliente OAuth 2.0 de tipo "Aplicación web" (Google Cloud Console → Credenciales).
+   *  En "Orígenes autorizados de JavaScript" agregue: https://practicantetd-gprovivienda.github.io */
+  const GOOGLE_CLIENT_ID = '306771753481-huigpeliqd31qhtpbg2gg2fi1b7nlcrc.apps.googleusercontent.com';
+
+  /** Correos (en minúsculas) con acceso al Panel Operador / Conductor y a "Sincronizar Contactos". */
+  const ADMIN_EMAILS = ['practicantetd@gprovivienda.com', 'rbernal@gprovivienda.com' , 'mmartinez@gprovivienda.com'];
+
+  /* ======================================================================== */
+
+  /** Dominios corporativos permitidos para iniciar sesión (restricción visual).
+   *  Vacío [] = cualquier cuenta de Google. */
+  const ALLOWED_DOMAINS = ['grupoprovivienda.com'];
+
+  /* ---- Constantes del contrato con Code.gs (no modificar) ---------------- */
+  const TIPOS = { INTERNA: 'Interna (Grupo Provivienda)', EXTERNA: 'Externa' };
+  const ESTADOS = ['Registrado', 'Recibido', 'En Camino', 'Entregado'];
+
+  /* ---- Ajustes de la interfaz -------------------------------------------- */
+  const TZ = 'America/Panama';
+  const FOTO_MAX_W = 800;          // px de ancho máximo tras comprimir
+  const FOTO_QUALITY = 0.75;       // calidad JPEG
+  const GPS_TIMEOUT_MS = 8000;     // espera máxima del GPS
+  const MAX_RECIENTES = 4;
+  const PAGE_SIZE = 60;            // tarjetas por página en el panel
+  const AUTO_REFRESH_MS = 120000;  // refresco silencioso (2 min)
+  const LS_SESSION = 'corr_session_v1';
+  const LS_RECENT = 'corr_recientes_v1:';
+  const DESC_CHIPS = ['Documentos firmados', 'Cheque / Factura', 'Contrato', 'Sobre cerrado', 'Planos', 'Insumos / Equipos', 'Valija'];
+
+  const TABS = [
+    { id: 'nuevo',   label: 'Nuevo Envío',                short: 'Nuevo',  icon: '✉️' },
+    { id: 'panel',   label: 'Panel Operador / Conductor', short: 'Panel',  icon: '🚚', admin: true },
+    { id: 'rastreo', label: 'Mis Envíos',                 short: 'Rastreo', icon: '📍' }
+  ];
+
+  const ESTADO_UI = {
+    'Registrado': { badge: 'bg-slate-100 text-slate-700 ring-slate-200',     dot: 'bg-slate-500',   emoji: '📝' },
+    'Recibido':   { badge: 'bg-indigo-50 text-indigo-700 ring-indigo-200',   dot: 'bg-indigo-600',  emoji: '📥' },
+    'En Camino':  { badge: 'bg-amber-50 text-amber-800 ring-amber-200',      dot: 'bg-amber-500',   emoji: '🚚' },
+    'Entregado':  { badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-600', emoji: '✅' }
+  };
+
+  const ACCIONES = [
+    { estado: 'Recibido',  emoji: '📥', solid: 'bg-indigo-600 text-white hover:bg-indigo-700',   outline: 'border-indigo-200 text-indigo-700 hover:bg-indigo-50' },
+    { estado: 'En Camino', emoji: '🚚', solid: 'bg-amber-500 text-white hover:bg-amber-600',     outline: 'border-amber-200 text-amber-700 hover:bg-amber-50' },
+    { estado: 'Entregado', emoji: '✅', solid: 'bg-emerald-600 text-white hover:bg-emerald-700', outline: 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }
+  ];
+
+  /* ---- Estado de la app -------------------------------------------------- */
+  const state = {
+    user: null,
+    isAdmin: false,
+    tab: 'nuevo',
+    loaded: false,
+    loading: false,
+    lastLoad: 0,
+    directorio: [],
+    envios: [],
+    tipo: TIPOS.INTERNA,
+    foto: null,                 // { dataUrl, w, h, kb }
+    resultados: [],
+    activeIdx: -1,
+    submitting: false,
+    panelFilter: 'activos',
+    panelLimit: PAGE_SIZE,
+    rastreoFilter: 'todos',
+    busy: new Map()             // referencia → { estado, phase: 'gps' | 'save' }
+  };
+
+  /* ==========================================================================
+   *  UTILIDADES
+   * ======================================================================== */
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const show = (el, visible, display = 'block') => {
+    if (!el) return;
+    el.classList.toggle('hidden', !visible);
+    if (display !== 'block') el.classList.toggle(display, !!visible);
+  };
+
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const norm = (v) => String(v == null ? '' : v).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  const isEmail = (v) => /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(String(v || '').trim());
+
+  const initials = (name) => String(name || '?').trim().split(/\s+/).slice(0, 2)
+    .map(p => p.charAt(0).toUpperCase()).join('') || '?';
+
+  const rankOf = (estado) => Math.max(0, ESTADOS.indexOf(estado));
+
+  const lsGet = (k, fallback) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* almacenamiento no disponible */ } };
+  const lsDel = (k) => { try { localStorage.removeItem(k); } catch (e) { /* noop */ } };
+
+  const dtFmt = new Intl.DateTimeFormat('es-PA', { timeZone: TZ, day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+
+  function toDate(v) {
+    if (!v) return null;
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function fmtDate(v) {
+    if (!v) return '';
+    const d = toDate(v);
+    return d ? dtFmt.format(d) : String(v);
+  }
+  function timeAgo(v) {
+    const d = toDate(v);
+    if (!d) return '';
+    const s = (Date.now() - d.getTime()) / 1000;
+    if (s < 60) return 'hace un momento';
+    const m = s / 60; if (m < 60) return `hace ${Math.floor(m)} min`;
+    const h = m / 60; if (h < 24) return `hace ${Math.floor(h)} h`;
+    const dd = h / 24; if (dd < 30) return `hace ${Math.floor(dd)} d`;
+    return fmtDate(v);
+  }
+  function isToday(v) {
+    const d = toDate(v);
+    return !!d && dayFmt.format(d) === dayFmt.format(new Date());
+  }
+
+  const ICONS = {
+    search:  '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    x:       '<path d="M6 6l12 12M18 6 6 18"/>',
+    refresh: '<path d="M20 11a8 8 0 0 0-14.9-3.9M4 4v4h4M4 13a8 8 0 0 0 14.9 3.9M20 20v-4h-4"/>',
+    logout:  '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/>',
+    camera:  '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    upload:  '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+    pin:     '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    copy:    '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/>',
+    check:   '<path d="m5 12 5 5L20 7"/>',
+    image:   '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/>',
+    clock:   '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    inbox:   '<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5 5h14l2 8v6H3v-6z"/>'
+  };
+  const ico = (name, cls = 'h-5 w-5') =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+
+  function hydrateIcons(root = document) {
+    $$('[data-ico]', root).forEach(el => {
+      el.outerHTML = ico(el.dataset.ico, el.dataset.cls || 'h-5 w-5');
+    });
+  }
+
+  function toast(msg, type = 'info', ms = 4200) {
+    const styles = {
+      success: 'bg-emerald-600 text-white',
+      error:   'bg-red-600 text-white',
+      warning: 'bg-amber-500 text-white',
+      info:    'bg-slate-900 text-white'
+    };
+    const el = document.createElement('div');
+    el.className = `pointer-events-auto max-w-md rounded-xl px-4 py-3 text-sm font-medium shadow-xl fade-in ${styles[type] || styles.info}`;
+    el.textContent = msg;
+    $('#toasts').appendChild(el);
+    setTimeout(() => {
+      el.style.transition = 'opacity .3s'; el.style.opacity = '0';
+      setTimeout(() => el.remove(), 300);
+    }, ms);
+  }
+
+  /* ==========================================================================
+   *  API (Apps Script)
+   * ======================================================================== */
+
+  const isApiConfigured = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(APPS_SCRIPT_URL);
+  const isClientConfigured = () => /\.apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID.trim());
+
+  async function parseJson(res) {
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error('El servidor no devolvió JSON. Verifique que APPS_SCRIPT_URL termine en /exec y que la implementación tenga acceso "Cualquier usuario".');
+    }
+  }
+
+  /** GET → { ok, directorio, envios }. Petición simple (sin cabeceras) = sin preflight CORS. */
+  async function apiGet() {
+    const url = APPS_SCRIPT_URL + (APPS_SCRIPT_URL.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+    const data = await parseJson(res);
+    if (!data.ok) throw Object.assign(new Error(data.error || 'Error al cargar los datos.'), { code: data.code });
+    return data;
+  }
+
+  /** POST con Content-Type text/plain para evitar el preflight CORS de Apps Script. */
+  async function apiPost(payload) {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const data = await parseJson(res);
+    if (!data.ok) throw Object.assign(new Error(data.error || 'Error en la operación.'), { code: data.code });
+    return data;
+  }
+
+  /* ==========================================================================
+   *  AUTENTICACIÓN (Google Identity Services)
+   * ======================================================================== */
+
+  function isAllowedEmail(email) {
+    if (!ALLOWED_DOMAINS.length) return true;
+    const e = String(email || '').toLowerCase();
+    return ALLOWED_DOMAINS.some(d => e.endsWith('@' + d.toLowerCase()));
+  }
+
+  function decodeJwt(token) {
+    const part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = part + '='.repeat((4 - (part.length % 4)) % 4);
+    const bin = atob(padded);
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+  }
+
+  function showLoginError(msg) {
+    const el = $('#login-error');
+    el.textContent = msg;
+    show(el, !!msg);
+  }
+
+  function showLogin() {
+    show($('#view-app'), false);
+    show($('#view-login'), true, 'flex');
+    $('#login-domain').textContent = ALLOWED_DOMAINS.length ? ALLOWED_DOMAINS.map(d => '@' + d).join(' / ') : 'de Google';
+    initGis();
+  }
+
+  let gisInitialized = false;
+  function initGis(tries = 0) {
+    if (!isClientConfigured()) {
+      showLoginError('Falta configurar GOOGLE_CLIENT_ID en index.html.');
+      return;
+    }
+    if (!(window.google && google.accounts && google.accounts.id)) {
+      if (tries > 60) {
+        showLoginError('No se pudo cargar el inicio de sesión de Google. Revise su conexión o desactive bloqueadores de contenido.');
+        return;
+      }
+      setTimeout(() => initGis(tries + 1), 200);
+      return;
+    }
+    if (!gisInitialized) {
+      const opts = {
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        ux_mode: 'popup'
+      };
+      if (ALLOWED_DOMAINS.length === 1) opts.hd = ALLOWED_DOMAINS[0];
+      google.accounts.id.initialize(opts);
+      gisInitialized = true;
+    }
+    const target = $('#gis-button');
+    target.innerHTML = '';
+    google.accounts.id.renderButton(target, {
+      type: 'standard', theme: 'filled_blue', size: 'large', text: 'signin_with',
+      shape: 'pill', logo_alignment: 'left', locale: 'es', width: 280
+    });
+  }
+
+  function handleCredential(response) {
+    try {
+      const p = decodeJwt(response.credential);
+      const email = String(p.email || '').toLowerCase();
+      if (!email || p.email_verified === false) {
+        showLoginError('No se pudo verificar el correo de la cuenta de Google.');
+        return;
+      }
+      if (!isAllowedEmail(email)) {
+        showLoginError(`La cuenta ${email} no pertenece al dominio corporativo (${ALLOWED_DOMAINS.map(d => '@' + d).join(', ')}).`);
+        try { google.accounts.id.disableAutoSelect(); } catch (e) { /* noop */ }
+        return;
+      }
+      const user = { email, name: p.name || email, picture: p.picture || '', hd: p.hd || '', loginAt: Date.now() };
+      lsSet(LS_SESSION, user);
+      showLoginError('');
+      startApp(user);
+    } catch (err) {
+      console.error(err);
+      showLoginError('Error al procesar el inicio de sesión. Intente de nuevo.');
+    }
+  }
+
+  function loadSession() {
+    const s = lsGet(LS_SESSION, null);
+    return s && s.email && isAllowedEmail(s.email) ? s : null;
+  }
+
+  function logout() {
+    lsDel(LS_SESSION);
+    try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); } catch (e) { /* noop */ }
+    Object.assign(state, { user: null, isAdmin: false, loaded: false, directorio: [], envios: [] });
+    history.replaceState(null, '', location.pathname + location.search);
+    showLogin();
+  }
+
+  /* ==========================================================================
+   *  ARRANQUE Y NAVEGACIÓN
+   * ======================================================================== */
+
+  function startApp(user) {
+    state.user = user;
+    state.isAdmin = ADMIN_EMAILS.map(e => e.toLowerCase().trim()).includes(user.email);
+
+    show($('#view-login'), false, 'flex');
+    show($('#view-app'), true);
+
+    $('#user-name').textContent = user.name;
+    $('#user-email').textContent = user.email;
+    $('#user-email-mobile').textContent = user.email;
+    const avatar = $('#user-avatar');
+    $('#user-initials').textContent = initials(user.name);
+    if (user.picture) {
+      avatar.src = user.picture;
+      avatar.onload = () => { show(avatar, true); show($('#user-initials'), false, 'flex'); };
+      avatar.onerror = () => { show(avatar, false); show($('#user-initials'), true, 'flex'); };
+    }
+    avatar.title = user.email;
+
+    renderNav();
+    renderRecientes();
+    renderAll();
+
+    const fromHash = location.hash.replace('#', '');
+    const initial = TABS.some(t => t.id === fromHash) ? fromHash
+      : (state.isAdmin && window.innerWidth < 1024 ? 'panel' : 'nuevo');
+    go(initial, { replace: true });
+
+    if (!isApiConfigured()) {
+      showBanner('warning', '⚙️ Configure <b>APPS_SCRIPT_URL</b> en <code>index.html</code> con la URL <code>/exec</code> de su Web App de Apps Script para cargar y registrar envíos.');
+      return;
+    }
+    loadData();
+  }
+
+  function renderNav() {
+    const tabs = TABS.filter(t => !t.admin || state.isAdmin);
+    $('#nav-desktop').innerHTML = tabs.map(t => `
+      <button type="button" role="tab" data-tab="${t.id}" aria-selected="false"
+        class="relative inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-blue-100 transition hover:bg-white/10 hover:text-white aria-selected:bg-white aria-selected:text-brand-800 aria-selected:shadow">
+        <span>${t.icon}</span>${esc(t.label)}
+        <span data-badge="${t.id}" class="hidden min-w-[20px] rounded-full bg-amber-400 px-1.5 text-center text-[11px] font-bold leading-5 text-amber-950"></span>
+      </button>`).join('');
+
+    const nav = $('#nav-mobile');
+    nav.className = nav.className.replace(/\bgrid-cols-\d\b/g, '') + ` grid-cols-${tabs.length}`;
+    nav.innerHTML = tabs.map(t => `
+      <button type="button" data-tab="${t.id}" aria-selected="false"
+        class="relative flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-medium text-slate-500 transition aria-selected:text-brand-700">
+        <span class="text-xl leading-none">${t.icon}</span>${esc(t.short)}
+        <span data-badge="${t.id}" class="absolute right-[calc(50%-24px)] top-1.5 hidden min-w-[18px] rounded-full bg-amber-400 px-1 text-center text-[10px] font-bold leading-[18px] text-amber-950"></span>
+      </button>`).join('');
+  }
+
+  function go(tab, { replace = false } = {}) {
+    if (tab === 'panel' && !state.isAdmin) tab = 'nuevo';
+    if (!TABS.some(t => t.id === tab)) tab = 'nuevo';
+    state.tab = tab;
+    $$('[data-tab-panel]').forEach(s => show(s, s.dataset.tabPanel === tab));
+    $$('[data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    const hash = '#' + tab;
+    if (location.hash !== hash) {
+      if (replace) history.replaceState(null, '', hash); else history.pushState(null, '', hash);
+    }
+    if (!replace) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function showBanner(type, html) {
+    const el = $('#banner');
+    if (!html) { show(el, false); el.innerHTML = ''; return; }
+    const styles = {
+      warning: 'border-amber-200 bg-amber-50 text-amber-900',
+      error: 'border-red-200 bg-red-50 text-red-800'
+    };
+    el.className = `mb-5 flex flex-col gap-3 rounded-2xl border p-4 text-sm sm:flex-row sm:items-center ${styles[type] || styles.warning}`;
+    el.innerHTML = `<div class="flex-1">${html}</div>` +
+      (type === 'error' ? `<button type="button" data-refresh class="btn-secondary shrink-0">${ico('refresh', 'h-4 w-4')} Reintentar</button>` : '');
+  }
+
+  /* ==========================================================================
+   *  CARGA DE DATOS
+   * ======================================================================== */
+
+  function setRefreshing(on) {
+    $$('[data-refresh]').forEach(b => {
+      b.disabled = on;
+      const svg = b.querySelector('svg');
+      if (svg) svg.classList.toggle('animate-spin', on);
+    });
+  }
+
+  function indexEnvio(e) {
+    e._q = norm([e.referencia, e.nombreDestinatario, e.correoDestinatario, e.departamento,
+      e.descripcion, e.emisor, e.estado, e.nombreProveedor, e.tipoMensajeria].join(' '));
+    return e;
+  }
+
+  async function loadData({ silent = false } = {}) {
+    if (!isApiConfigured() || state.loading || !state.user) return;
+    state.loading = true;
+    setRefreshing(true);
+    try {
+      const data = await apiGet();
+      state.directorio = (data.directorio || []).map(c => Object.assign(c, { _q: norm(`${c.nombre} ${c.correo} ${c.departamento}`) }));
+      state.envios = (data.envios || []).map(indexEnvio);
+      state.loaded = true;
+      state.lastLoad = Date.now();
+      showBanner(null);
+      renderAll();
+    } catch (err) {
+      console.error(err);
+      if (!state.loaded) {
+        showBanner('error', `<b>No se pudieron cargar los datos.</b> ${esc(err.message)}`);
+        state.loaded = true;
+        renderAll();
+      } else if (!silent) {
+        toast(err.message, 'error');
+      }
+    } finally {
+      state.loading = false;
+      setRefreshing(false);
+    }
+  }
+
+  function renderAll() {
+    renderDirectorioInfo();
+    renderDeptos();
+    renderAside();
+    renderPanel();
+    renderRastreo();
+    renderBadges();
+  }
+
+  function renderBadges() {
+    const me = state.user ? state.user.email : '';
+    const activosPanel = state.envios.filter(e => e.estado !== 'Entregado').length;
+    const misActivos = state.envios.filter(e => (e.emisor === me || e.correoDestinatario === me) && e.estado !== 'Entregado').length;
+    const counts = { panel: activosPanel, rastreo: misActivos };
+    $$('[data-badge]').forEach(b => {
+      const n = counts[b.dataset.badge] || 0;
+      b.textContent = n > 99 ? '99+' : String(n);
+      show(b, state.loaded && n > 0);
+    });
+  }
+
+  /* ==========================================================================
+   *  NUEVO ENVÍO
+   * ======================================================================== */
+
+  function setTipo(tipo) {
+    state.tipo = tipo === TIPOS.EXTERNA ? TIPOS.EXTERNA : TIPOS.INTERNA;
+    const externa = state.tipo === TIPOS.EXTERNA;
+    $$('[data-tipo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tipo === state.tipo)));
+    show($('#bloque-interna'), !externa);
+    show($('#bloque-externa'), externa, 'grid');
+    $('#paso2-titulo').textContent = externa ? 'Proveedor y contacto asociado' : 'Destinatario';
+    cerrarResultados();
+  }
+
+  function renderDirectorioInfo() {
+    const n = state.directorio.length;
+    $('#dir-info').innerHTML = !state.loaded
+      ? 'Cargando directorio…'
+      : n
+        ? `${n} contactos disponibles. También puede escribir los datos manualmente.`
+        : (state.isAdmin
+          ? 'El directorio está vacío. Use <b>🔄 Sincronizar Contactos</b> en el Panel Operador.'
+          : 'El directorio está vacío. Escriba los datos del destinatario manualmente.');
+  }
+
+  function renderDeptos() {
+    const set = new Set();
+    state.directorio.forEach(c => c.departamento && set.add(c.departamento));
+    state.envios.forEach(e => e.departamento && set.add(e.departamento));
+    $('#lista-deptos').innerHTML = Array.from(set).sort((a, b) => a.localeCompare(b, 'es'))
+      .map(d => `<option value="${esc(d)}"></option>`).join('');
+  }
+
+  /* ---- Destinatarios recientes ------------------------------------------- */
+  const recentKey = () => LS_RECENT + (state.user ? state.user.email : '');
+  const getRecientes = () => lsGet(recentKey(), []);
+
+  function guardarReciente(c) {
+    if (!isEmail(c.correo)) return;
+    const lista = getRecientes().filter(r => r.correo !== c.correo);
+    lista.unshift({ nombre: c.nombre, correo: c.correo, departamento: c.departamento || '' });
+    lsSet(recentKey(), lista.slice(0, MAX_RECIENTES));
+    renderRecientes();
+  }
+
+  function renderRecientes() {
+    const lista = getRecientes();
+    show($('#recientes-wrap'), lista.length > 0);
+    $('#recientes').innerHTML = lista.map((c, i) => `
+      <button type="button" class="chip" data-reciente="${i}" title="${esc(c.correo)}">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[11px] font-bold text-brand-700">${esc(initials(c.nombre))}</span>
+        <span class="max-w-[160px] truncate">${esc(c.nombre)}</span>
+      </button>`).join('');
+  }
+
+  /* ---- Buscador predictivo ----------------------------------------------- */
+  function buscarDirectorio(q) {
+    const terms = norm(q).trim().split(/\s+/).filter(Boolean);
+    if (!terms.length) return [];
+    return state.directorio.filter(c => terms.every(t => c._q.includes(t))).slice(0, 8);
+  }
+
+  function resaltar(text, q) {
+    const safe = esc(text);
+    const t = norm(q).trim().split(/\s+/)[0];
+    if (!t) return safe;
+    const idx = norm(text).indexOf(t);
+    if (idx < 0) return safe;
+    const raw = String(text);
+    return esc(raw.slice(0, idx)) + '<mark class="rounded bg-yellow-100 px-0.5 text-inherit">' + esc(raw.slice(idx, idx + t.length)) + '</mark>' + esc(raw.slice(idx + t.length));
+  }
+
+  function renderResultados() {
+    const q = $('#buscador').value;
+    const ul = $('#resultados');
+    state.resultados = buscarDirectorio(q);
+    if (!q.trim()) { cerrarResultados(); return; }
+    if (!state.resultados.length) {
+      ul.innerHTML = `<li class="px-4 py-3 text-sm text-slate-500">Sin coincidencias. Puede escribir los datos manualmente abajo.</li>`;
+    } else {
+      ul.innerHTML = state.resultados.map((c, i) => `
+        <li role="option" data-contacto="${i}" aria-selected="${i === state.activeIdx}"
+            class="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition hover:bg-slate-50 aria-selected:bg-brand-50">
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">${esc(initials(c.nombre))}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-semibold text-slate-900">${resaltar(c.nombre, q)}</span>
+            <span class="block truncate text-xs text-slate-500">${resaltar(c.correo, q)}</span>
+          </span>
+          ${c.departamento ? `<span class="hidden max-w-[40%] truncate rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 sm:inline">${resaltar(c.departamento, q)}</span>` : ''}
+        </li>`).join('');
+    }
+    show(ul, true);
+    $('#buscador').setAttribute('aria-expanded', 'true');
+  }
+
+  function cerrarResultados() {
+    show($('#resultados'), false);
+    $('#buscador').setAttribute('aria-expanded', 'false');
+    state.activeIdx = -1;
+  }
+
+  function seleccionarContacto(c) {
+    $('#nombreDestinatario').value = c.nombre || '';
+    $('#correoDestinatario').value = c.correo || '';
+    $('#departamento').value = c.departamento || '';
+    $('#buscador').value = '';
+    cerrarResultados();
+    ['nombreDestinatario', 'correoDestinatario', 'departamento'].forEach(id => {
+      const el = $('#' + id);
+      el.classList.remove('input-error');
+      el.classList.add('ring-4', 'ring-emerald-100', 'border-emerald-400');
+      setTimeout(() => el.classList.remove('ring-4', 'ring-emerald-100', 'border-emerald-400'), 1200);
+    });
+  }
+
+  /* ---- Descripción rápida ------------------------------------------------- */
+  function renderDescChips() {
+    $('#desc-chips').innerHTML = DESC_CHIPS.map(d =>
+      `<button type="button" class="chip text-xs" data-desc="${esc(d)}">+ ${esc(d)}</button>`).join('');
+  }
+
+  function agregarDescripcion(texto) {
+    const ta = $('#descripcion');
+    const actual = ta.value.trim();
+    if (norm(actual).includes(norm(texto))) return;
+    ta.value = actual ? `${actual}, ${texto}` : texto;
+    ta.classList.remove('input-error');
+    ta.focus();
+  }
+
+  /* ---- Foto: compresión con canvas ---------------------------------------- */
+  function comprimirImagen(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, FOTO_MAX_W / img.naturalWidth);
+          const w = Math.round(img.naturalWidth * scale);
+          const h = Math.round(img.naturalHeight * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';            // fondo blanco para PNG transparentes
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', FOTO_QUALITY);
+          resolve({ dataUrl, w, h, kb: Math.round((dataUrl.length - 23) * 3 / 4 / 1024) });
+        } catch (err) {
+          reject(err);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Formato de imagen no soportado.')); };
+      img.src = url;
+    });
+  }
+
+  async function manejarFoto(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (file.type && !file.type.startsWith('image/')) { toast('Seleccione un archivo de imagen.', 'warning'); return; }
+    show($('#foto-vacia'), false, 'grid');
+    show($('#foto-procesando'), true, 'flex');
+    try {
+      state.foto = await comprimirImagen(file);
+      renderFoto();
+    } catch (err) {
+      console.error(err);
+      state.foto = null;
+      renderFoto();
+      toast('No se pudo procesar la imagen. Intente con otra foto (JPG o PNG).', 'error');
+    } finally {
+      show($('#foto-procesando'), false, 'flex');
+    }
+  }
+
+  function renderFoto() {
+    const f = state.foto;
+    show($('#foto-vacia'), !f, 'grid');
+    show($('#foto-preview'), !!f, 'flex');
+    if (f) {
+      $('#foto-img').src = f.dataUrl;
+      $('#foto-info').textContent = `${f.w} × ${f.h} px · ${f.kb} KB (comprimida)`;
+    } else {
+      $('#foto-img').removeAttribute('src');
+    }
+  }
+
+  /* ---- Validación y envío ------------------------------------------------- */
+  function valoresFormulario() {
+    const externa = state.tipo === TIPOS.EXTERNA;
+    return {
+      tipoMensajeria: state.tipo,
+      nombreDestinatario: $('#nombreDestinatario').value.trim(),
+      correoDestinatario: $('#correoDestinatario').value.trim().toLowerCase(),
+      departamento: $('#departamento').value.trim(),
+      descripcion: $('#descripcion').value.trim(),
+      nombreProveedor: externa ? $('#nombreProveedor').value.trim() : '',
+      correoProveedor: externa ? $('#correoProveedor').value.trim().toLowerCase() : ''
+    };
+  }
+
+  function validar(v) {
+    const errores = [];
+    const marcar = (id, msg) => { $('#' + id).classList.add('input-error'); errores.push({ id, msg }); };
+    $$('#form-envio .input-error').forEach(el => el.classList.remove('input-error'));
+
+    if (v.tipoMensajeria === TIPOS.EXTERNA) {
+      if (!v.nombreProveedor) marcar('nombreProveedor', 'El nombre del proveedor es obligatorio.');
+      if (v.correoProveedor && !isEmail(v.correoProveedor)) marcar('correoProveedor', 'El correo del proveedor no es válido.');
+    }
+    if (!v.nombreDestinatario) marcar('nombreDestinatario', 'El nombre del destinatario es obligatorio.');
+    if (!isEmail(v.correoDestinatario)) marcar('correoDestinatario', 'Ingrese un correo de destinatario válido.');
+    if (!v.descripcion) marcar('descripcion', 'La descripción de la correspondencia es obligatoria.');
+    return errores;
+  }
+
+  function mostrarErrorForm(msg) {
+    const el = $('#form-error');
+    el.innerHTML = msg;
+    show(el, !!msg);
+  }
+
+  function setBotonEnviar(cargando) {
+    const btn = $('#btn-enviar');
+    btn.disabled = cargando;
+    btn.innerHTML = cargando
+      ? '<span class="spinner"></span> Registrando envío…'
+      : 'Registrar envío';
+  }
+
+  async function enviarFormulario(ev) {
+    ev.preventDefault();
+    if (state.submitting) return;
+    mostrarErrorForm('');
+
+    if (!isApiConfigured()) { mostrarErrorForm('Falta configurar <b>APPS_SCRIPT_URL</b> en index.html.'); return; }
+
+    const v = valoresFormulario();
+    const errores = validar(v);
+    if (errores.length) {
+      mostrarErrorForm('<b>Revise el formulario:</b><ul class="mt-1 list-disc pl-5">' + errores.map(e => `<li>${esc(e.msg)}</li>`).join('') + '</ul>');
+      const first = $('#' + errores[0].id);
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => first.focus({ preventScroll: true }), 300);
+      return;
+    }
+
+    state.submitting = true;
+    setBotonEnviar(true);
+    try {
+      const payload = Object.assign({ action: 'createShipment', userEmail: state.user.email }, v, {
+        fotoBase64: state.foto ? state.foto.dataUrl : '',
+        fotoMimeType: 'image/jpeg'
+      });
+      const r = await apiPost(payload);
+
+      if (v.tipoMensajeria === TIPOS.INTERNA) {
+        guardarReciente({ nombre: v.nombreDestinatario, correo: v.correoDestinatario, departamento: v.departamento });
+      }
+      mostrarConfirmacion(r, v);
+      resetFormulario();
+      loadData({ silent: true });
+    } catch (err) {
+      console.error(err);
+      mostrarErrorForm(`<b>No se pudo registrar el envío.</b> ${esc(err.message)}`);
+      toast('No se pudo registrar el envío.', 'error');
+    } finally {
+      state.submitting = false;
+      setBotonEnviar(false);
+    }
+  }
+
+  function resetFormulario() {
+    $('#form-envio').reset();
+    state.foto = null;
+    renderFoto();
+    setTipo(TIPOS.INTERNA);
+    $$('#form-envio .input-error').forEach(el => el.classList.remove('input-error'));
+    mostrarErrorForm('');
+  }
+
+  function mostrarConfirmacion(r, v) {
+    const correo = r.correo || {};
+    const aviso = correo.enviado
+      ? `<p class="flex items-center justify-center gap-2 text-sm text-emerald-700">${ico('check', 'h-4 w-4')} Se notificó por correo a ${esc(v.correoDestinatario)}</p>`
+      : `<p class="text-sm text-amber-700">No se envió notificación por correo${correo.motivo || correo.error ? ': ' + esc(correo.motivo || correo.error) : '.'}</p>`;
+
+    const box = $('#nuevo-confirmacion');
+    box.innerHTML = `
+      <div class="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-lg fade-in">
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 px-6 py-8 text-center text-white">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/20 pop-in">${ico('check', 'h-8 w-8')}</div>
+          <h2 class="mt-3 text-xl font-bold">¡Envío registrado con éxito!</h2>
+          <p class="text-sm text-emerald-50">${esc(fmtDate(r.marcaTemporal) || fmtDate(new Date()))}</p>
+        </div>
+        <div class="px-6 py-8 text-center sm:px-10">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Código de referencia</p>
+          <div class="pop-in mx-auto mt-3 inline-block rounded-2xl border-4 border-dashed border-emerald-400 bg-emerald-50 px-6 py-4 sm:px-10">
+            <span class="font-mono text-6xl font-extrabold tracking-[0.12em] text-slate-900 sm:text-7xl">#${esc(r.referencia)}</span>
+          </div>
+          <p class="mx-auto mt-5 max-w-md text-lg font-semibold text-slate-800">Anote este número de 5 dígitos en el paquete o sobre</p>
+          <div class="mx-auto mt-6 max-w-md space-y-1 rounded-2xl bg-slate-50 p-4 text-left text-sm">
+            <p><span class="text-slate-500">Para:</span> <b>${esc(v.nombreDestinatario)}</b> · ${esc(v.correoDestinatario)}</p>
+            ${v.departamento ? `<p><span class="text-slate-500">Departamento / Proyecto:</span> ${esc(v.departamento)}</p>` : ''}
+            ${v.nombreProveedor ? `<p><span class="text-slate-500">Proveedor:</span> ${esc(v.nombreProveedor)}</p>` : ''}
+            <p><span class="text-slate-500">Descripción:</span> ${esc(v.descripcion)}</p>
+          </div>
+          <div class="mt-4">${aviso}</div>
+          <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <button type="button" data-copiar="${esc(r.referencia)}" class="btn-secondary">${ico('copy', 'h-4 w-4')} Copiar código</button>
+            <button type="button" data-tab="rastreo" class="btn-secondary">📍 Ver en Mis Envíos</button>
+            <button type="button" id="btn-otro" class="btn-primary">✉️ Registrar otro envío</button>
+          </div>
+        </div>
+      </div>`;
+    show($('#nuevo-form-wrap'), false);
+    show(box, true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function registrarOtro() {
+    show($('#nuevo-confirmacion'), false);
+    show($('#nuevo-form-wrap'), true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderAside() {
+    const cont = $('#aside-recientes');
+    if (!state.loaded) { cont.innerHTML = skeletonLines(3); return; }
+    const me = state.user.email;
+    const mios = state.envios.filter(e => e.emisor === me).slice(0, 5);
+    cont.innerHTML = mios.length ? mios.map(e => `
+      <button type="button" data-ir-ref="${esc(e.referencia)}" class="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-50">
+        <span class="font-mono text-sm font-extrabold text-slate-900">#${esc(e.referencia)}</span>
+        <span class="min-w-0 flex-1 truncate text-sm text-slate-600">${esc(e.nombreDestinatario)}</span>
+        ${badge(e.estado, true)}
+      </button>`).join('')
+      : '<p class="text-sm text-slate-400">Aún no ha registrado envíos.</p>';
+  }
+
+  /* ==========================================================================
+   *  COMPONENTES COMPARTIDOS
+   * ======================================================================== */
+
+  function badge(estado, small = false) {
+    const ui = ESTADO_UI[estado] || ESTADO_UI['Registrado'];
+    return `<span class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full ring-1 ring-inset ${ui.badge} ${small ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'} font-semibold">
+      <span class="h-1.5 w-1.5 rounded-full ${ui.dot}"></span>${esc(estado || 'Registrado')}</span>`;
+  }
+
+  function miniatura(e, size = 'h-24 w-24') {
+    if (!e.foto) {
+      return `<div class="${size} flex shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-slate-100 text-slate-400">${ico('image', 'h-6 w-6')}<span class="text-[10px]">Sin foto</span></div>`;
+    }
+    return `<button type="button" data-lightbox="${esc(e.foto)}" data-caption="Ref. #${esc(e.referencia)} · ${esc(e.nombreDestinatario)}"
+        class="${size} group relative shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 focus:outline-none focus:ring-4 focus:ring-brand-100" title="Ampliar foto">
+        <img src="${esc(e.foto)}" alt="Foto del paquete #${esc(e.referencia)}" loading="lazy" referrerpolicy="no-referrer"
+             onerror="this.parentElement.classList.add('img-error');this.remove();"
+             class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
+        <span class="absolute inset-0 flex items-center justify-center bg-slate-900/0 text-white opacity-0 transition group-hover:bg-slate-900/30 group-hover:opacity-100">${ico('search', 'h-6 w-6')}</span>
+      </button>`;
+  }
+
+  function skeletonLines(n) {
+    return Array.from({ length: n }, () => '<div class="skeleton h-9 rounded-lg"></div>').join('');
+  }
+
+  function skeletonCards(n) {
+    return Array.from({ length: n }, () => `
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="flex gap-4"><div class="skeleton h-24 w-24 rounded-xl"></div>
+          <div class="flex-1 space-y-2"><div class="skeleton h-7 w-28 rounded"></div><div class="skeleton h-4 w-3/4 rounded"></div><div class="skeleton h-4 w-1/2 rounded"></div></div>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2"><div class="skeleton h-12 rounded-xl"></div><div class="skeleton h-12 rounded-xl"></div><div class="skeleton h-12 rounded-xl"></div></div>
+      </div>`).join('');
+  }
+
+  function estadoVacio(titulo, texto) {
+    return `<div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">${ico('inbox', 'h-6 w-6')}</div>
+      <p class="mt-3 font-semibold text-slate-700">${esc(titulo)}</p>
+      <p class="mt-1 text-sm text-slate-500">${esc(texto)}</p></div>`;
+  }
+
+  function abrirLightbox(url, caption) {
+    const big = String(url).replace(/([?&]sz=)w\d+/, '$1w1600');
+    const img = $('#lightbox-img');
+    img.src = big;
+    img.onerror = () => { if (img.src !== url) img.src = url; };
+    $('#lightbox-caption').textContent = caption || '';
+    show($('#lightbox'), true, 'flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function cerrarLightbox() {
+    show($('#lightbox'), false, 'flex');
+    $('#lightbox-img').removeAttribute('src');
+    document.body.style.overflow = '';
+  }
+
+  /* ==========================================================================
+   *  PANEL OPERADOR / CONDUCTOR
+   * ======================================================================== */
+
+  function renderPanel() {
+    if (!state.isAdmin) return;
+    const list = $('#panel-list');
+    const more = $('#panel-more');
+
+    if (!state.loaded) {
+      $('#panel-stats').innerHTML = Array.from({ length: 4 }, () => '<div class="skeleton h-[74px] rounded-2xl"></div>').join('');
+      list.innerHTML = skeletonCards(3);
+      more.innerHTML = '';
+      return;
+    }
+
+    // Estadísticas
+    const c = { 'Registrado': 0, 'Recibido': 0, 'En Camino': 0 };
+    let hoy = 0;
+    state.envios.forEach(e => {
+      if (e.estado in c) c[e.estado]++;
+      if (e.estado === 'Entregado' && isToday(e.entregado)) hoy++;
+    });
+    const stat = (label, n, ui) => `
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="flex items-center gap-2 text-xs font-medium text-slate-500"><span class="h-2 w-2 rounded-full ${ui}"></span>${label}</div>
+        <div class="mt-1 text-2xl font-bold text-slate-900">${n}</div>
+      </div>`;
+    $('#panel-stats').innerHTML =
+      stat('Por recibir (Registrado)', c['Registrado'], 'bg-slate-500') +
+      stat('Recibidos', c['Recibido'], 'bg-indigo-600') +
+      stat('En camino', c['En Camino'], 'bg-amber-500') +
+      stat('Entregados hoy', hoy, 'bg-emerald-600');
+
+    // Filtros
+    const q = norm($('#panel-search').value).trim();
+    const terms = q.split(/\s+/).filter(Boolean);
+    let items = state.envios.filter(e => {
+      if (state.panelFilter === 'activos' && e.estado === 'Entregado') return false;
+      if (state.panelFilter === 'entregados' && e.estado !== 'Entregado') return false;
+      return terms.every(t => e._q.includes(t.replace(/^#/, '')));
+    });
+
+    // Coincidencia exacta de código primero
+    if (/^#?\d{5}$/.test(q)) {
+      const ref = q.replace('#', '');
+      items.sort((a, b) => (b.referencia === ref) - (a.referencia === ref));
+    }
+
+    const total = items.length;
+    items = items.slice(0, state.panelLimit);
+
+    list.innerHTML = total
+      ? items.map(tarjetaPanel).join('')
+      : estadoVacio(
+          q ? 'Sin resultados' : (state.panelFilter === 'activos' ? 'No hay envíos activos' : 'No hay envíos'),
+          q ? 'Pruebe con otro código, nombre o departamento.' : 'Cuando se registren nuevos envíos aparecerán aquí.'
+        );
+
+    more.innerHTML = total > items.length
+      ? `<button type="button" id="btn-mas" class="btn-secondary">Mostrar más (${total - items.length} restantes)</button>`
+      : (total ? `<p class="text-xs text-slate-400">${total} envío${total === 1 ? '' : 's'}</p>` : '');
+  }
+
+  function tarjetaPanel(e) {
+    const busy = state.busy.get(e.referencia);
+    const externa = e.tipoMensajeria === TIPOS.EXTERNA;
+    const entregado = e.estado === 'Entregado';
+
+    const pie = entregado
+      ? `<div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+           <span class="text-emerald-700">✅ Entregado ${esc(fmtDate(e.entregado))}</span>
+           ${e.duracion ? `<span class="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">${ico('clock', 'h-3.5 w-3.5')} ${esc(e.duracion)}</span>` : ''}
+         </div>`
+      : `<div class="grid grid-cols-3 gap-2">${botonesEstado(e, busy)}</div>`;
+
+    return `
+      <article class="flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm transition fade-in ${busy ? 'border-brand-300 ring-4 ring-brand-100' : 'border-slate-200 hover:shadow-md'}">
+        <div class="flex gap-4 p-4">
+          ${miniatura(e)}
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2">
+              <div class="font-mono text-[28px] font-extrabold leading-none tracking-wider text-slate-900">#${esc(e.referencia)}</div>
+              ${badge(e.estado)}
+            </div>
+            <div class="mt-2 truncate font-semibold text-slate-900" title="${esc(e.correoDestinatario)}">${esc(e.nombreDestinatario || e.correoDestinatario)}</div>
+            <div class="truncate text-sm text-slate-500">${esc(e.departamento || e.correoDestinatario)}</div>
+            <p class="mt-1 line-clamp-2 text-sm text-slate-700" title="${esc(e.descripcion)}">${esc(e.descripcion)}</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pb-3 text-xs text-slate-500">
+          <span class="truncate">De: ${esc(e.emisor)}</span>
+          <span title="${esc(fmtDate(e.marcaTemporal))}">· ${esc(timeAgo(e.marcaTemporal))}</span>
+          ${externa ? `<span class="rounded-md bg-amber-50 px-1.5 py-0.5 font-medium text-amber-800 ring-1 ring-amber-200">Externa${e.nombreProveedor ? ' · ' + esc(e.nombreProveedor) : ''}</span>` : ''}
+          ${e.mapsUrl ? `<a href="${esc(e.mapsUrl)}" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 font-medium text-brand-600 hover:underline">${ico('pin', 'h-3.5 w-3.5')}GPS</a>` : ''}
+        </div>
+        <div class="mt-auto border-t border-slate-100 bg-slate-50/80 p-3">${pie}</div>
+      </article>`;
+  }
+
+  function botonesEstado(e, busy) {
+    const rank = rankOf(e.estado);
+    return ACCIONES.map((a, i) => {
+      const r = i + 1;
+      const hecho = r <= rank;
+      const siguiente = r === rank + 1;
+      const cargando = busy && busy.estado === a.estado;
+      const disabled = hecho || !!busy;
+      const estilo = hecho
+        ? 'border-transparent bg-slate-100 text-slate-400'
+        : siguiente
+          ? `border-transparent shadow-sm ${a.solid}`
+          : `bg-white ${a.outline}`;
+      const contenido = cargando
+        ? `<span class="spinner"></span><span>${busy.phase === 'gps' ? 'GPS…' : 'Guardando…'}</span>`
+        : `<span class="text-base leading-none">${hecho ? '✓' : a.emoji}</span><span>${a.estado}</span>`;
+      const titulo = hecho ? `Ya está en "${e.estado}"` : `Marcar como ${a.estado}`;
+      return `<button type="button" data-estado="${a.estado}" data-ref="${esc(e.referencia)}" ${disabled ? 'disabled' : ''} title="${esc(titulo)}"
+        class="flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-xs font-semibold transition sm:flex-row sm:gap-1.5 sm:text-[13px] disabled:cursor-not-allowed ${busy && !cargando ? 'opacity-50' : ''} ${estilo}">${contenido}</button>`;
+    }).join('');
+  }
+
+  /** GPS con límite duro de 8 s: si tarda o se niega el permiso, continúa con null. */
+  function obtenerGps() {
+    return new Promise(resolve => {
+      if (!('geolocation' in navigator)) { resolve(null); return; }
+      let terminado = false;
+      const fin = (v) => { if (!terminado) { terminado = true; clearTimeout(timer); resolve(v); } };
+      const timer = setTimeout(() => fin(null), GPS_TIMEOUT_MS);
+      try {
+        navigator.geolocation.getCurrentPosition(
+          p => fin({ lat: p.coords.latitude, lng: p.coords.longitude }),
+          () => fin(null),
+          { enableHighAccuracy: true, timeout: GPS_TIMEOUT_MS, maximumAge: 60000 }
+        );
+      } catch (err) {
+        fin(null);
+      }
+    });
+  }
+
+  async function cambiarEstado(referencia, estado) {
+    if (state.busy.has(referencia)) return;
+    const env = state.envios.find(e => e.referencia === referencia);
+    if (!env) return;
+
+    if (estado === 'Entregado' &&
+        !confirm(`¿Confirmar la ENTREGA del envío #${referencia} a ${env.nombreDestinatario || env.correoDestinatario}?\n\nEsta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    state.busy.set(referencia, { estado, phase: 'gps' });
+    renderPanel();
+
+    const gps = await obtenerGps();
+    state.busy.set(referencia, { estado, phase: 'save' });
+    renderPanel();
+
+    try {
+      const r = await apiPost({ action: 'updateStatus', userEmail: state.user.email, referencia, estado, gps });
+      if (r.envio) reemplazarEnvio(r.envio);
+
+      if (r.unchanged) {
+        toast(r.mensaje || `El envío #${referencia} ya estaba en "${estado}".`, 'info');
+      } else {
+        toast(`#${referencia} → ${estado}${gps ? ' · 📍 GPS guardado' : ' · sin ubicación GPS'}`, 'success');
+        if (r.correo && r.correo.enviado === false && r.correo.error) {
+          toast('El estado se guardó, pero el correo no se pudo enviar.', 'warning');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast(err.message || 'No se pudo actualizar el estado.', 'error', 6000);
+      if (err.code === 409 || err.code === 404) loadData({ silent: true });
+    } finally {
+      state.busy.delete(referencia);
+      renderPanel();
+      renderRastreo();
+      renderAside();
+      renderBadges();
+    }
+  }
+
+  function reemplazarEnvio(nuevo) {
+    indexEnvio(nuevo);
+    const i = state.envios.findIndex(e => e.referencia === nuevo.referencia);
+    if (i >= 0) state.envios[i] = nuevo; else state.envios.unshift(nuevo);
+  }
+
+  async function sincronizarContactos() {
+    const btn = $('#btn-sync');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Sincronizando…';
+    try {
+      const r = await apiPost({ action: 'syncContacts', userEmail: state.user.email });
+      toast(`Directorio sincronizado: ${r.importados} contactos importados.`, 'success');
+      await loadData({ silent: true });
+    } catch (err) {
+      console.error(err);
+      toast('Error al sincronizar contactos: ' + err.message, 'error', 6000);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔄 Sincronizar Contactos';
+    }
+  }
+
+  /* ==========================================================================
+   *  MIS ENVÍOS (RASTREO)
+   * ======================================================================== */
+
+  function renderRastreo() {
+    const cont = $('#rastreo-list');
+    if (!state.user) return;
+    if (!state.loaded) { cont.innerHTML = `<div class="grid gap-4 lg:grid-cols-2">${skeletonCards(2)}</div>`; return; }
+
+    const me = state.user.email;
+    const terms = norm($('#rastreo-search').value).trim().split(/\s+/).filter(Boolean)
+      .map(t => t.replace(/^#/, ''));
+    const coincide = e => terms.every(t => e._q.includes(t));
+
+    const enviados = state.envios.filter(e => e.emisor === me && coincide(e));
+    const paraMi = state.envios.filter(e => e.correoDestinatario === me && coincide(e));
+
+    // Contadores en el filtro segmentado
+    const labels = { todos: 'Todos', enviados: 'Enviados por mí', recibidos: 'Para mí' };
+    const cuentas = { todos: new Set([...enviados, ...paraMi]).size, enviados: enviados.length, recibidos: paraMi.length };
+    $$('[data-rastreo-filter]').forEach(b => {
+      const k = b.dataset.rastreoFilter;
+      b.innerHTML = `${labels[k]} <span class="ml-1 rounded-full bg-slate-200/80 px-1.5 text-[11px] font-semibold text-slate-600">${cuentas[k]}</span>`;
+    });
+
+    const seccion = (titulo, emoji, lista, dir) => `
+      <div>
+        <h3 class="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">${emoji} ${titulo} <span class="text-slate-400">(${lista.length})</span></h3>
+        ${lista.length
+          ? `<div class="grid gap-4 lg:grid-cols-2">${lista.map(e => tarjetaRastreo(e, dir)).join('')}</div>`
+          : `<p class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">${terms.length ? 'Sin coincidencias con la búsqueda.' : 'No hay envíos en esta sección.'}</p>`}
+      </div>`;
+
+    const html = [];
+    if (state.rastreoFilter !== 'recibidos') html.push(seccion('Enviados por mí', '📤', enviados, 'enviado'));
+    if (state.rastreoFilter !== 'enviados') html.push(seccion('Para mí', '📥', paraMi, 'recibido'));
+    cont.innerHTML = html.join('');
+  }
+
+  function tarjetaRastreo(e, dir) {
+    const entregado = e.estado === 'Entregado';
+    const contraparte = dir === 'enviado'
+      ? `<span class="text-slate-500">Para:</span> <b class="text-slate-800">${esc(e.nombreDestinatario || e.correoDestinatario)}</b>${e.departamento ? ' · ' + esc(e.departamento) : ''}`
+      : `<span class="text-slate-500">De:</span> <b class="text-slate-800">${esc(e.emisor)}</b>`;
+
+    return `
+      <article class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm fade-in">
+        <div class="flex gap-4 p-5">
+          ${miniatura(e, 'h-20 w-20 sm:h-24 sm:w-24')}
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-mono text-2xl font-extrabold tracking-wider text-slate-900">#${esc(e.referencia)}</span>
+              ${badge(e.estado)}
+            </div>
+            <p class="mt-1.5 line-clamp-2 font-medium text-slate-800">${esc(e.descripcion)}</p>
+            <p class="mt-1 truncate text-sm">${contraparte}</p>
+            ${e.tipoMensajeria === TIPOS.EXTERNA ? `<p class="mt-1 text-xs text-amber-800">Externa${e.nombreProveedor ? ' · ' + esc(e.nombreProveedor) : ''}</p>` : ''}
+          </div>
+        </div>
+        <div class="px-5 pb-5">${lineaTiempo(e)}</div>
+        <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3 text-sm">
+          ${entregado && e.duracion
+            ? `<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">${ico('clock', 'h-3.5 w-3.5')} Duración de entrega: ${esc(e.duracion)}</span>`
+            : !entregado ? `<span class="inline-flex items-center gap-1.5 text-xs text-slate-500">${ico('clock', 'h-3.5 w-3.5')} Registrado ${esc(timeAgo(e.marcaTemporal))}</span>` : ''}
+          ${e.mapsUrl
+            ? `<a href="${esc(e.mapsUrl)}" target="_blank" rel="noopener" class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700">${ico('pin', 'h-4 w-4')} Ver ubicación en Google Maps</a>`
+            : ''}
+        </div>
+      </article>`;
+  }
+
+  function lineaTiempo(e) {
+    const rank = rankOf(e.estado);
+    const entregado = e.estado === 'Entregado';
+    const fechas = [e.marcaTemporal, e.recibido, '', e.entregado];
+    const color = entregado ? 'bg-emerald-500' : 'bg-brand-600';
+
+    return `<ol class="grid grid-cols-4">${ESTADOS.map((paso, i) => {
+      const alcanzado = i <= rank;
+      const actual = i === rank;
+      const fecha = fechas[i] ? fmtDate(fechas[i]) : (alcanzado && i === 2 ? 'En ruta' : '');
+      const linea = i > 0
+        ? `<span class="absolute right-1/2 top-[14px] h-1 w-full -translate-y-1/2 rounded ${i <= rank ? color : 'bg-slate-200'}"></span>`
+        : '';
+      const punto = alcanzado
+        ? `<span class="relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-white ${color} ${actual && !entregado ? 'ring-4 ring-brand-100' : ''}">${ico('check', 'h-4 w-4')}</span>`
+        : `<span class="relative z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 border-slate-200 bg-white text-xs font-semibold text-slate-400">${i + 1}</span>`;
+      return `<li class="relative flex flex-col items-center px-0.5 text-center">
+        ${linea}${punto}
+        <span class="mt-2 text-[11px] font-semibold leading-tight sm:text-xs ${alcanzado ? 'text-slate-800' : 'text-slate-400'}">${esc(paso)}</span>
+        <span class="mt-0.5 text-[10px] leading-tight text-slate-500 sm:text-[11px]">${esc(fecha)}</span>
+      </li>`;
+    }).join('')}</ol>`;
+  }
+
+  /* ==========================================================================
+   *  EVENTOS
+   * ======================================================================== */
+
+  function wireEvents() {
+    // Delegación global de clics
+    document.addEventListener('click', (ev) => {
+      const t = ev.target;
+
+      const tabBtn = t.closest('[data-tab]');
+      if (tabBtn) { go(tabBtn.dataset.tab); return; }
+
+      const lb = t.closest('[data-lightbox]');
+      if (lb) { abrirLightbox(lb.dataset.lightbox, lb.dataset.caption); return; }
+
+      if (t.closest('[data-close-lightbox]') || t.id === 'lightbox') { cerrarLightbox(); return; }
+
+      const st = t.closest('[data-estado][data-ref]');
+      if (st && !st.disabled) { cambiarEstado(st.dataset.ref, st.dataset.estado); return; }
+
+      if (t.closest('[data-refresh]')) { loadData(); return; }
+
+      const tipo = t.closest('[data-tipo]');
+      if (tipo) { setTipo(tipo.dataset.tipo); return; }
+
+      const rec = t.closest('[data-reciente]');
+      if (rec) { const c = getRecientes()[+rec.dataset.reciente]; if (c) seleccionarContacto(c); return; }
+
+      const desc = t.closest('[data-desc]');
+      if (desc) { agregarDescripcion(desc.dataset.desc); return; }
+
+      const pf = t.closest('[data-panel-filter]');
+      if (pf) {
+        state.panelFilter = pf.dataset.panelFilter;
+        state.panelLimit = PAGE_SIZE;
+        $$('[data-panel-filter]').forEach(b => b.setAttribute('aria-pressed', String(b === pf)));
+        renderPanel();
+        return;
+      }
+
+      const rf = t.closest('[data-rastreo-filter]');
+      if (rf) {
+        state.rastreoFilter = rf.dataset.rastreoFilter;
+        $$('[data-rastreo-filter]').forEach(b => b.setAttribute('aria-pressed', String(b === rf)));
+        renderRastreo();
+        return;
+      }
+
+      const ir = t.closest('[data-ir-ref]');
+      if (ir) { $('#rastreo-search').value = ir.dataset.irRef; renderRastreo(); go('rastreo'); return; }
+
+      const cp = t.closest('[data-copiar]');
+      if (cp) {
+        const txt = cp.dataset.copiar;
+        (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+          .then(() => toast(`Código #${txt} copiado.`, 'success'))
+          .catch(() => toast(`Código: #${txt}`, 'info'));
+        return;
+      }
+
+      if (t.closest('#btn-otro')) { registrarOtro(); return; }
+      if (t.closest('#btn-mas')) { state.panelLimit += PAGE_SIZE; renderPanel(); return; }
+
+      // Cerrar resultados del buscador al hacer clic fuera
+      if (!t.closest('#resultados') && t.id !== 'buscador') cerrarResultados();
+    });
+
+    $('#btn-logout').addEventListener('click', logout);
+    $('#btn-sync').addEventListener('click', sincronizarContactos);
+
+    // Buscador predictivo
+    const buscador = $('#buscador');
+    buscador.addEventListener('input', () => { state.activeIdx = -1; renderResultados(); });
+    buscador.addEventListener('focus', () => { if (buscador.value.trim()) renderResultados(); });
+    buscador.addEventListener('keydown', (ev) => {
+      const n = state.resultados.length;
+      if (ev.key === 'ArrowDown' && n) { ev.preventDefault(); state.activeIdx = (state.activeIdx + 1) % n; renderResultados(); }
+      else if (ev.key === 'ArrowUp' && n) { ev.preventDefault(); state.activeIdx = (state.activeIdx - 1 + n) % n; renderResultados(); }
+      else if (ev.key === 'Enter') {
+        ev.preventDefault();
+        if (n) seleccionarContacto(state.resultados[Math.max(0, state.activeIdx)]);
+      }
+      else if (ev.key === 'Escape') cerrarResultados();
+    });
+    // mousedown evita que el blur cierre la lista antes de seleccionar
+    $('#resultados').addEventListener('mousedown', (ev) => {
+      const li = ev.target.closest('[data-contacto]');
+      if (li) { ev.preventDefault(); seleccionarContacto(state.resultados[+li.dataset.contacto]); }
+    });
+
+    // Limpia el estado de error al escribir
+    $('#form-envio').addEventListener('input', (ev) => {
+      if (ev.target.classList.contains('input-error')) ev.target.classList.remove('input-error');
+    });
+    $('#form-envio').addEventListener('submit', enviarFormulario);
+
+    // Foto
+    $('#foto-camara').addEventListener('change', (ev) => manejarFoto(ev.target));
+    $('#foto-archivo').addEventListener('change', (ev) => manejarFoto(ev.target));
+    $('#foto-quitar').addEventListener('click', () => { state.foto = null; renderFoto(); });
+
+    // Filtros
+    $('#panel-search').addEventListener('input', () => { state.panelLimit = PAGE_SIZE; renderPanel(); });
+    $('#rastreo-search').addEventListener('input', renderRastreo);
+
+    // Navegación con historial
+    window.addEventListener('popstate', () => {
+      const tab = location.hash.replace('#', '');
+      if (state.user && TABS.some(t => t.id === tab)) go(tab, { replace: true });
+    });
+
+    // Teclado: cerrar visor
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') cerrarLightbox(); });
+
+    // Refresco silencioso al volver a la pestaña o cada 2 minutos
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.user && Date.now() - state.lastLoad > 60000) loadData({ silent: true });
+    });
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && state.user && state.loaded && !state.busy.size && !state.submitting) {
+        loadData({ silent: true });
+      }
+    }, AUTO_REFRESH_MS);
+  }
+
+  /* ==========================================================================
+   *  INICIO
+   * ======================================================================== */
+
+  (function boot() {
+    hydrateIcons();
+    renderDescChips();
+    wireEvents();
+    setTipo(TIPOS.INTERNA);
+    const session = loadSession();
+    if (session) startApp(session); else showLogin();
+  })();
+  </script>
+</body>
+</html>
