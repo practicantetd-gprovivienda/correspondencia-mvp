@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f2a4a">
+  <meta name="theme-color" content="#991b1b">
   <meta name="description" content="Sistema de Trazabilidad y Gestión de Correspondencia · Grupo Provivienda">
   <title>Correspondencia · Grupo Provivienda</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
@@ -23,9 +23,10 @@
             mono: ['JetBrains Mono', 'ui-monospace', 'Consolas', 'monospace']
           },
           colors: {
+            /* Paleta corporativa (rojos Grupo Provivienda) */
             brand: {
               50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171',
-              500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#991b1b'
+              500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d'
             }
           }
         }
@@ -37,15 +38,17 @@
       .card        { @apply bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6; }
       .label       { @apply block text-sm font-medium text-slate-700 mb-1.5; }
       .input       { @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] text-slate-900 placeholder-slate-400 shadow-sm transition focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100; }
-      .input-error { @apply border-red-400 ring-4 ring-red-100; }
-      .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60; }
-      .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60; }
-      .chip        { @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-700; }
+      .input-error { @apply border-brand-500 ring-4 ring-brand-100; }
+      .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60; }
+      .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 disabled:cursor-not-allowed disabled:opacity-60; }
+      .chip        { @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800 aria-pressed:border-brand-600 aria-pressed:bg-brand-600 aria-pressed:text-white; }
       .step-title  { @apply mb-4 flex items-center gap-2.5 text-base font-semibold text-slate-900; }
-      .step-num    { @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white; }
+      .step-num    { @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-700 text-sm font-bold text-white; }
       .seg         { @apply inline-flex w-full gap-1 rounded-xl bg-slate-100 p-1 md:w-auto; }
-      .seg > button { @apply flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 md:flex-none aria-pressed:bg-white aria-pressed:text-slate-900 aria-pressed:shadow-sm; }
+      .seg > button { @apply flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:text-brand-800 md:flex-none aria-pressed:bg-white aria-pressed:text-brand-800 aria-pressed:shadow-sm; }
       .tipo-card   { @apply flex w-full items-start gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-brand-300 aria-pressed:border-brand-600 aria-pressed:bg-brand-50 aria-pressed:ring-4 aria-pressed:ring-brand-100; }
+      .ro-label    { @apply text-[11px] font-semibold uppercase tracking-wide text-slate-500; }
+      .ro-value    { @apply mt-1 min-h-[22px] break-all text-[15px] font-medium text-slate-900; }
     }
   </style>
   <style>
@@ -58,9 +61,27 @@
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { scrollbar-width: none; }
     input[type="search"]::-webkit-search-cancel-button { cursor: pointer; }
-    .skeleton { background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 50%, #eef2f6 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+    .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
     @keyframes shimmer { to { background-position: -200% 0; } }
+    .mirror { transform: scaleX(-1); }
   </style>
+  <script>
+    /* Logo con respaldo: prueba rutas alternativas (data-alts) y, si ninguna
+       carga, oculta la imagen y muestra el texto estilizado que la sigue.
+       Va en <head> para existir antes de que las imágenes fallen. */
+    function logoFallback(img) {
+      var alts = (img.getAttribute('data-alts') || '').split('|').filter(Boolean);
+      if (alts.length) {
+        img.setAttribute('data-alts', alts.slice(1).join('|'));
+        img.src = alts[0];
+        return;
+      }
+      img.onerror = null;
+      img.style.display = 'none';
+      var txt = img.nextElementSibling;
+      if (txt) txt.style.display = '';
+    }
+  </script>
 
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -73,12 +94,19 @@
   <!-- ===================================================================== -->
   <div id="view-login" class="hidden min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-brand-800 to-brand-700 p-4">
     <div class="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-2xl sm:p-10 fade-in">
-      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-3xl">📦</div>
-      <h1 class="mt-5 text-2xl font-bold text-slate-900">Gestión de Correspondencia</h1>
-      <p class="text-sm font-semibold text-brand-600">Grupo Provivienda</p>
+      <div class="flex justify-center">
+        <img src="./logo-provivienda.png" data-alts="./logo-provivienda.png.jpg" alt="Grupo Provivienda"
+             onerror="logoFallback(this)" class="h-24 w-auto max-w-[220px] object-contain">
+        <div style="display:none" class="rounded-2xl bg-brand-50 px-6 py-4 ring-1 ring-brand-100">
+          <div class="text-2xl font-extrabold tracking-tight text-brand-700">Grupo Provivienda</div>
+          <div class="text-[11px] font-semibold uppercase tracking-[0.25em] text-brand-500">Correspondencia</div>
+        </div>
+      </div>
+      <h1 class="mt-6 text-2xl font-bold text-slate-900">Gestión de Correspondencia</h1>
+      <p class="text-sm font-semibold text-brand-700">Grupo Provivienda</p>
       <p class="mt-4 text-sm leading-relaxed text-slate-600">Registra, rastrea y entrega la correspondencia de la empresa con trazabilidad completa: foto, código único, fechas y ubicación GPS.</p>
       <div id="gis-button" class="mt-8 flex min-h-[44px] justify-center"></div>
-      <p id="login-error" class="mt-5 hidden rounded-xl bg-red-50 p-3 text-sm text-red-700"></p>
+      <p id="login-error" class="mt-5 hidden rounded-xl bg-brand-50 p-3 text-sm text-brand-800 ring-1 ring-brand-200"></p>
       <p class="mt-6 text-xs text-slate-400">Acceso exclusivo con tu cuenta corporativa <span id="login-domain" class="font-medium text-slate-500"></span></p>
     </div>
   </div>
@@ -92,10 +120,14 @@
     <header class="sticky top-0 z-30 bg-brand-800 text-white shadow-lg shadow-brand-900/20">
       <div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-xl">📦</div>
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-sm">
+            <img src="./logo-provivienda.png" data-alts="./logo-provivienda.png.jpg" alt="Grupo Provivienda"
+                 onerror="logoFallback(this)" class="h-full w-full object-contain">
+            <span style="display:none" class="text-sm font-extrabold tracking-tight text-brand-700">GP</span>
+          </div>
           <div class="min-w-0 leading-tight">
             <div class="truncate text-[15px] font-bold">Correspondencia</div>
-            <div class="truncate text-xs text-blue-200">
+            <div class="truncate text-xs text-brand-100">
               <span class="xl:hidden" id="user-email-mobile"></span>
               <span class="hidden xl:inline">Grupo Provivienda</span>
             </div>
@@ -107,11 +139,11 @@
         <div class="ml-auto flex items-center gap-3">
           <div class="hidden text-right leading-tight xl:block">
             <div id="user-name" class="max-w-[220px] truncate text-sm font-semibold"></div>
-            <div id="user-email" class="max-w-[220px] truncate text-xs text-blue-200"></div>
+            <div id="user-email" class="max-w-[220px] truncate text-xs text-brand-100"></div>
           </div>
-          <img id="user-avatar" alt="" referrerpolicy="no-referrer" class="hidden h-9 w-9 rounded-full object-cover ring-2 ring-white/30">
-          <div id="user-initials" class="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-sm font-bold ring-2 ring-white/30"></div>
-          <button id="btn-logout" type="button" title="Cerrar sesión" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-blue-100 transition hover:bg-white/10 hover:text-white">
+          <img id="user-avatar" alt="" referrerpolicy="no-referrer" class="hidden h-9 w-9 rounded-full object-cover ring-2 ring-white/40">
+          <div id="user-initials" class="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-sm font-bold ring-2 ring-white/40"></div>
+          <button id="btn-logout" type="button" title="Cerrar sesión" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-brand-100 transition hover:bg-white/10 hover:text-white">
             <span data-ico="logout" data-cls="h-4 w-4"></span><span class="hidden sm:inline">Cerrar sesión</span>
           </button>
         </div>
@@ -133,7 +165,7 @@
             <div id="nuevo-form-wrap">
               <div class="mb-5">
                 <h2 class="text-2xl font-bold text-slate-900">Registrar nuevo envío</h2>
-                <p class="mt-1 text-sm text-slate-500">Complete los datos. Al finalizar recibirá un código de 5 dígitos para rotular el paquete o sobre.</p>
+                <p class="mt-1 text-sm text-slate-500">Complete los datos. Al finalizar recibirá un código (ej. <b class="font-mono text-brand-700">#10000</b>) para rotular el paquete o sobre.</p>
               </div>
 
               <form id="form-envio" novalidate class="space-y-5">
@@ -163,50 +195,48 @@
                 <div class="card">
                   <h3 class="step-title"><span class="step-num">2</span><span id="paso2-titulo">Destinatario</span></h3>
 
-                  <!-- Interna: recientes + buscador -->
-                  <div id="bloque-interna" class="space-y-4">
-                    <div id="recientes-wrap" class="hidden">
-                      <p class="label">Destinatarios recientes</p>
-                      <div id="recientes" class="flex flex-wrap gap-2"></div>
-                    </div>
-                    <div class="relative">
-                      <label class="label" for="buscador">Buscar en el directorio</label>
-                      <div class="relative">
-                        <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
-                        <input id="buscador" type="search" autocomplete="off" spellcheck="false" placeholder="Nombre, correo o departamento…" class="input pl-11" role="combobox" aria-expanded="false" aria-controls="resultados" aria-autocomplete="list">
-                      </div>
-                      <ul id="resultados" role="listbox" class="absolute z-20 mt-1.5 hidden max-h-80 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"></ul>
-                      <p id="dir-info" class="mt-1.5 text-xs text-slate-400"></p>
-                    </div>
-                  </div>
-
                   <!-- Externa: proveedor -->
-                  <div id="bloque-externa" class="hidden grid gap-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4 sm:grid-cols-2">
+                  <div id="bloque-externa" class="mb-4 hidden grid gap-4 rounded-xl border border-brand-200 bg-brand-50/60 p-4 sm:grid-cols-2">
                     <div>
-                      <label class="label" for="nombreProveedor">Nombre del proveedor <span class="text-red-500">*</span></label>
+                      <label class="label" for="nombreProveedor">Nombre del proveedor <span class="text-brand-600">*</span></label>
                       <input id="nombreProveedor" type="text" maxlength="150" autocomplete="organization" placeholder="Ej. DHL, Notaría Quinta…" class="input">
                     </div>
                     <div>
                       <label class="label" for="correoProveedor">Correo del proveedor <span class="font-normal text-slate-400">(opcional)</span></label>
                       <input id="correoProveedor" type="email" inputmode="email" autocomplete="off" placeholder="proveedor@empresa.com" class="input">
                     </div>
-                    <p class="text-xs text-amber-800 sm:col-span-2">Indique abajo la persona de contacto asociada al envío.</p>
+                    <p class="text-xs text-brand-800 sm:col-span-2">Indique abajo la persona de la empresa asociada al envío.</p>
                   </div>
 
-                  <!-- Datos del destinatario (comunes) -->
-                  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                  <!-- Recientes -->
+                  <div id="recientes-wrap" class="mb-4 hidden">
+                    <p class="label">Destinatarios recientes</p>
+                    <div id="recientes" class="flex flex-wrap gap-2"></div>
+                  </div>
+
+                  <!-- Nombre del destinatario: único campo editable, con autocompletado -->
+                  <div class="relative">
+                    <label class="label" for="nombreDestinatario">Nombre del destinatario <span class="text-brand-600">*</span></label>
+                    <div class="relative">
+                      <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
+                      <input id="nombreDestinatario" type="text" maxlength="150" autocomplete="off" spellcheck="false"
+                             placeholder="Escriba el nombre, correo o departamento…" class="input pl-11 pr-11"
+                             role="combobox" aria-expanded="false" aria-controls="resultados" aria-autocomplete="list">
+                      <span id="contacto-ok" class="pointer-events-none absolute right-3.5 top-1/2 hidden -translate-y-1/2 text-brand-600" title="Persona seleccionada"></span>
+                    </div>
+                    <ul id="resultados" role="listbox" class="absolute z-20 mt-1.5 hidden max-h-80 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl"></ul>
+                    <p id="dir-info" class="mt-1.5 text-xs text-slate-400"></p>
+                  </div>
+
+                  <!-- Datos informativos de solo lectura -->
+                  <div class="mt-4 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2" aria-live="polite">
                     <div>
-                      <label class="label" for="nombreDestinatario">Nombre del destinatario <span class="text-red-500">*</span></label>
-                      <input id="nombreDestinatario" type="text" maxlength="150" autocomplete="off" class="input">
+                      <p class="ro-label">Correo del destinatario</p>
+                      <p id="ro-correo" class="ro-value"></p>
                     </div>
                     <div>
-                      <label class="label" for="correoDestinatario">Correo del destinatario <span class="text-red-500">*</span></label>
-                      <input id="correoDestinatario" type="email" inputmode="email" autocomplete="off" class="input">
-                    </div>
-                    <div class="sm:col-span-2">
-                      <label class="label" for="departamento">Departamento / Proyecto</label>
-                      <input id="departamento" type="text" maxlength="150" list="lista-deptos" autocomplete="off" placeholder="Se completa al elegir un contacto (puede editarlo)" class="input">
-                      <datalist id="lista-deptos"></datalist>
+                      <p class="ro-label">Departamento / Proyecto</p>
+                      <p id="ro-depto" class="ro-value"></p>
                     </div>
                   </div>
                 </div>
@@ -215,21 +245,23 @@
                 <div class="card">
                   <h3 class="step-title"><span class="step-num">3</span>Detalle y evidencia fotográfica</h3>
 
-                  <label class="label" for="descripcion">Descripción de la correspondencia <span class="text-red-500">*</span></label>
-                  <div id="desc-chips" class="mb-2.5 flex flex-wrap gap-2"></div>
-                  <textarea id="descripcion" rows="3" maxlength="2000" placeholder="¿Qué se envía? Ej. Contrato firmado de compraventa, lote 14…" class="input resize-y"></textarea>
+                  <label class="label" for="descripcion">Descripción de la correspondencia <span class="text-brand-600">*</span></label>
+                  <p class="mb-2 text-xs text-slate-500">Más enviados:</p>
+                  <div id="desc-chips" class="mb-3 flex flex-wrap gap-2"></div>
+                  <textarea id="descripcion" rows="3" maxlength="2000" placeholder="¿Qué se envía? Ej. 2 juegos de copias de planos aprobados, lote 14…" class="input resize-y"></textarea>
 
                   <div class="mt-5">
                     <p class="label">Fotografía del paquete <span class="font-normal text-slate-400">(recomendada para identificarlo)</span></p>
                     <div id="foto-vacia" class="grid gap-3 sm:grid-cols-2">
-                      <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 bg-brand-50/60 px-4 py-5 text-sm font-semibold text-brand-700 transition hover:border-brand-400 hover:bg-brand-50">
-                        <input id="foto-camara" type="file" accept="image/*" capture="environment" class="sr-only">
-                        <span data-ico="camera" data-cls="h-5 w-5"></span> Tomar foto
-                      </label>
-                      <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm font-semibold text-slate-600 transition hover:border-slate-400 hover:bg-slate-100">
+                      <button type="button" id="btn-abrir-camara" class="flex items-center justify-center gap-2 rounded-xl border-2 border-brand-600 bg-brand-600 px-4 py-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700">
+                        <span data-ico="camera" data-cls="h-5 w-5"></span> Abrir Cámara
+                      </button>
+                      <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white px-4 py-5 text-sm font-semibold text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800">
                         <input id="foto-archivo" type="file" accept="image/*" class="sr-only">
-                        <span data-ico="upload" data-cls="h-5 w-5"></span> Subir imagen
+                        <span data-ico="upload" data-cls="h-5 w-5"></span> Subir archivo
                       </label>
+                      <!-- Respaldo si el navegador no permite getUserMedia -->
+                      <input id="foto-camara-nativa" type="file" accept="image/*" capture="environment" class="hidden">
                     </div>
                     <div id="foto-procesando" class="hidden items-center gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
                       <span class="spinner text-brand-600"></span> Comprimiendo imagen…
@@ -240,14 +272,14 @@
                         <p class="text-sm font-semibold text-slate-800">Foto lista para enviar</p>
                         <p id="foto-info" class="text-xs text-slate-500"></p>
                       </div>
-                      <button id="foto-quitar" type="button" class="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="Quitar foto">
+                      <button id="foto-quitar" type="button" class="rounded-lg p-2 text-slate-400 transition hover:bg-brand-50 hover:text-brand-700" title="Quitar foto">
                         <span data-ico="x" data-cls="h-5 w-5"></span>
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div id="form-error" class="hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"></div>
+                <div id="form-error" class="hidden rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-800"></div>
 
                 <button id="btn-enviar" type="submit" class="btn-primary w-full py-4 text-base">
                   Registrar envío
@@ -265,15 +297,15 @@
               <h3 class="font-semibold text-slate-900">¿Cómo funciona?</h3>
               <ol class="mt-4 space-y-3 text-sm text-slate-600">
                 <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs">📝</span><span><b class="text-slate-800">Registrado:</b> usted crea el envío y obtiene el código.</span></li>
-                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs">📥</span><span><b class="text-slate-800">Recibido:</b> Archivo o el conductor toma el paquete.</span></li>
-                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-50 text-xs">🚚</span><span><b class="text-slate-800">En Camino:</b> sale a ruta; el destinatario recibe aviso.</span></li>
-                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs">✅</span><span><b class="text-slate-800">Entregado:</b> se calcula la duración y se notifica a ambos.</span></li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xs">📥</span><span><b class="text-slate-800">Recibido:</b> Archivo o el conductor toma el paquete.</span></li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs">🚚</span><span><b class="text-slate-800">En Camino:</b> sale a ruta; el destinatario recibe aviso.</span></li>
+                <li class="flex gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-200 text-xs">✅</span><span><b class="text-slate-800">Entregado:</b> se calcula la duración y se notifica a ambos.</span></li>
               </ol>
             </div>
             <div class="card">
               <div class="flex items-center justify-between">
                 <h3 class="font-semibold text-slate-900">Mis últimos registros</h3>
-                <button type="button" data-tab="rastreo" class="text-xs font-semibold text-brand-600 hover:underline">Ver todos</button>
+                <button type="button" data-tab="rastreo" class="text-xs font-semibold text-brand-700 hover:underline">Ver todos</button>
               </div>
               <div id="aside-recientes" class="mt-3 space-y-2"></div>
             </div>
@@ -288,14 +320,11 @@
         <div class="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <h2 class="text-2xl font-bold text-slate-900">Panel Operador / Conductor</h2>
-            <p class="mt-1 text-sm text-slate-500">Actualice el estado de cada paquete. Se guarda fecha, hora y ubicación GPS.</p>
+            <p class="mt-1 text-sm text-slate-500">Avance cada paquete con un toque. Se guarda fecha, hora y ubicación GPS.</p>
           </div>
-          <div class="grid grid-cols-2 gap-2 sm:flex">
-            <button type="button" data-refresh class="btn-secondary">
-              <span data-ico="refresh" data-cls="h-4 w-4"></span> Actualizar lista
-            </button>
-            <button type="button" id="btn-sync" class="btn-primary">🔄 Sincronizar Contactos</button>
-          </div>
+          <button type="button" data-refresh class="btn-secondary self-start sm:self-auto">
+            <span data-ico="refresh" data-cls="h-4 w-4"></span> Actualizar lista
+          </button>
         </div>
 
         <div id="panel-stats" class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4"></div>
@@ -303,7 +332,7 @@
         <div class="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:items-center">
           <div class="relative flex-1">
             <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
-            <input id="panel-search" type="search" autocomplete="off" placeholder="Código de 5 dígitos, destinatario o departamento…" class="input pl-11">
+            <input id="panel-search" type="search" autocomplete="off" placeholder="Código (#10000), destinatario o departamento…" class="input pl-11">
           </div>
           <div class="seg" id="panel-seg">
             <button type="button" data-panel-filter="activos" aria-pressed="true">Activos</button>
@@ -333,7 +362,7 @@
         <div class="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm md:flex-row md:items-center">
           <div class="relative flex-1">
             <span data-ico="search" data-cls="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></span>
-            <input id="rastreo-search" type="search" autocomplete="off" placeholder="Código, estado o palabra clave…" class="input pl-11">
+            <input id="rastreo-search" type="search" autocomplete="off" placeholder="Código (#10000), estado o palabra clave…" class="input pl-11">
           </div>
           <div class="seg no-scrollbar overflow-x-auto" id="rastreo-seg">
             <button type="button" data-rastreo-filter="todos" aria-pressed="true">Todos</button>
@@ -346,8 +375,35 @@
       </section>
     </main>
 
-    <!-- Navegación inferior (móvil) -->
+    <!-- Navegación inferior (móvil / tablet) -->
     <nav id="nav-mobile" class="pb-safe fixed inset-x-0 bottom-0 z-30 grid border-t border-slate-200 bg-white/95 backdrop-blur lg:hidden"></nav>
+  </div>
+
+  <!-- Cámara (getUserMedia) -->
+  <div id="camara-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/90 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="cam-titulo">
+    <div class="flex h-full w-full max-w-3xl flex-col overflow-hidden bg-black sm:h-auto sm:rounded-2xl sm:shadow-2xl">
+      <div class="flex items-center justify-between gap-3 bg-brand-900 px-4 py-3 text-white">
+        <h3 id="cam-titulo" class="flex items-center gap-2 font-semibold"><span data-ico="camera" data-cls="h-5 w-5"></span> Foto del paquete</h3>
+        <button type="button" data-cam-cerrar class="rounded-full p-2 transition hover:bg-white/10" title="Cerrar">
+          <span data-ico="x" data-cls="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="relative flex min-h-[50vh] flex-1 items-center justify-center bg-black sm:min-h-[360px]">
+        <video id="cam-video" playsinline muted autoplay class="max-h-[70vh] w-full object-contain"></video>
+        <div id="cam-estado" class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/80">
+          <span class="spinner h-8 w-8 text-white/70"></span><span>Iniciando cámara…</span>
+        </div>
+      </div>
+      <div class="pb-safe flex items-center justify-between gap-3 bg-brand-900 px-4 py-4">
+        <button type="button" data-cam-cerrar class="rounded-xl px-4 py-3 text-sm font-semibold text-brand-100 transition hover:bg-white/10">Cancelar</button>
+        <button type="button" id="cam-tomar" disabled class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-base font-bold text-brand-800 shadow-lg ring-4 ring-brand-500/60 transition hover:bg-brand-50 disabled:opacity-50">
+          📸 Tomar Foto
+        </button>
+        <button type="button" id="cam-cambiar" class="invisible rounded-xl px-4 py-3 text-sm font-semibold text-brand-100 transition hover:bg-white/10" title="Cambiar cámara">
+          <span data-ico="refresh" data-cls="h-5 w-5"></span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Visor de fotos -->
@@ -380,7 +436,7 @@
    *  En "Orígenes autorizados de JavaScript" agregue: https://practicantetd-gprovivienda.github.io */
   const GOOGLE_CLIENT_ID = '306771753481-huigpeliqd31qhtpbg2gg2fi1b7nlcrc.apps.googleusercontent.com';
 
-  /** Correos (en minúsculas) con acceso al Panel Operador / Conductor y a "Sincronizar Contactos". */
+  /** Correos (en minúsculas) con acceso al Panel Operador / Conductor. */
   const ADMIN_EMAILS = ['practicantetd@gprovivienda.com', 'rbernal@gprovivienda.com' , 'mmartinez@gprovivienda.com'];
 
   /* ======================================================================== */
@@ -403,25 +459,37 @@
   const AUTO_REFRESH_MS = 120000;  // refresco silencioso (2 min)
   const LS_SESSION = 'corr_session_v1';
   const LS_RECENT = 'corr_recientes_v1:';
-  const DESC_CHIPS = ['Documentos firmados', 'Cheque / Factura', 'Contrato', 'Sobre cerrado', 'Planos', 'Insumos / Equipos', 'Valija'];
+
+  /** Chips de descripción rápida: Top 5 de lo más enviado según historico.csv
+   *  (541 registros, clasificados por palabras clave el 18/11/2026):
+   *  planos 265 · permisos/aprobaciones 141 · contratos/adendas 118 ·
+   *  memoriales 112 · documentos legales 83.
+   *  Si no hubiera histórico, use DESC_CHIPS_GENERALES. */
+  const DESC_CHIPS = ['Planos / Copias de planos', 'Permisos y aprobaciones', 'Contrato / Adenda', 'Memorial para firma', 'Documentos legales (cédula, finca)'];
+  const DESC_CHIPS_GENERALES = ['Contrato / Escritura', 'Cheque / Factura', 'Documentos firmados', 'Expediente de cliente', 'Sobre confidencial'];
+
+  /** Normalización de departamentos (misma regla que Code.gs). */
+  const DEPTO_MINUSCULAS = ['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'o', 'u', 'a', 'al', 'en', 'por', 'para', 'con'];
+  const DEPTO_ACRONIMOS = ['TI', 'IT', 'RRHH', 'RR.HH.', 'QA', 'BIM', 'SAP', 'CRM', 'ERP', 'GP', 'PH', 'S.A.'];
 
   const TABS = [
-    { id: 'nuevo',   label: 'Nuevo Envío',                short: 'Nuevo',  icon: '✉️' },
-    { id: 'panel',   label: 'Panel Operador / Conductor', short: 'Panel',  icon: '🚚', admin: true },
+    { id: 'nuevo',   label: 'Nuevo Envío',                short: 'Nuevo',   icon: '✉️' },
+    { id: 'panel',   label: 'Panel Operador / Conductor', short: 'Panel',   icon: '🚚', admin: true },
     { id: 'rastreo', label: 'Mis Envíos',                 short: 'Rastreo', icon: '📍' }
   ];
 
+  /* Estados en escala de la paleta roja (más intenso = más avanzado). */
   const ESTADO_UI = {
-    'Registrado': { badge: 'bg-slate-100 text-slate-700 ring-slate-200',     dot: 'bg-slate-500',   emoji: '📝' },
-    'Recibido':   { badge: 'bg-indigo-50 text-indigo-700 ring-indigo-200',   dot: 'bg-indigo-600',  emoji: '📥' },
-    'En Camino':  { badge: 'bg-amber-50 text-amber-800 ring-amber-200',      dot: 'bg-amber-500',   emoji: '🚚' },
-    'Entregado':  { badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-600', emoji: '✅' }
+    'Registrado': { badge: 'bg-slate-100 text-slate-700 ring-slate-200',   dot: 'bg-slate-400' },
+    'Recibido':   { badge: 'bg-brand-50 text-brand-700 ring-brand-200',    dot: 'bg-brand-400' },
+    'En Camino':  { badge: 'bg-brand-100 text-brand-800 ring-brand-300',   dot: 'bg-brand-600' },
+    'Entregado':  { badge: 'bg-brand-800 text-white ring-brand-800',       dot: 'bg-white' }
   };
 
   const ACCIONES = [
-    { estado: 'Recibido',  emoji: '📥', solid: 'bg-indigo-600 text-white hover:bg-indigo-700',   outline: 'border-indigo-200 text-indigo-700 hover:bg-indigo-50' },
-    { estado: 'En Camino', emoji: '🚚', solid: 'bg-amber-500 text-white hover:bg-amber-600',     outline: 'border-amber-200 text-amber-700 hover:bg-amber-50' },
-    { estado: 'Entregado', emoji: '✅', solid: 'bg-emerald-600 text-white hover:bg-emerald-700', outline: 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' }
+    { estado: 'Recibido',  emoji: '📥' },
+    { estado: 'En Camino', emoji: '🚚' },
+    { estado: 'Entregado', emoji: '✅' }
   ];
 
   /* ---- Estado de la app -------------------------------------------------- */
@@ -435,6 +503,7 @@
     directorio: [],
     envios: [],
     tipo: TIPOS.INTERNA,
+    contacto: null,             // { nombre, correo, departamento } elegido del directorio
     foto: null,                 // { dataUrl, w, h, kb }
     resultados: [],
     activeIdx: -1,
@@ -442,7 +511,8 @@
     panelFilter: 'activos',
     panelLimit: PAGE_SIZE,
     rastreoFilter: 'todos',
-    busy: new Map()             // referencia → { estado, phase: 'gps' | 'save' }
+    busy: new Map(),            // referencia → { estado, phase: 'gps' | 'save' }
+    cam: { stream: null, facing: 'environment' }
   };
 
   /* ==========================================================================
@@ -470,6 +540,21 @@
     .map(p => p.charAt(0).toUpperCase()).join('') || '?';
 
   const rankOf = (estado) => Math.max(0, ESTADOS.indexOf(estado));
+
+  /** Código de referencia con formato visible: 10000 → "#10000". */
+  const fmtRef = (ref) => '#' + String(ref == null ? '' : ref).replace(/^#/, '');
+
+  /** "  TRANSFORMACIÓN   digital " → "Transformación Digital" (igual que Code.gs). */
+  function normDepto(v) {
+    const s = String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+    if (!s) return '';
+    return s.toLowerCase().replace(/[^\s\/\-(),&]+/g, (w, offset) => {
+      const up = w.toUpperCase();
+      if (DEPTO_ACRONIMOS.includes(up)) return up;
+      if (offset > 0 && DEPTO_MINUSCULAS.includes(w)) return w;
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    });
+  }
 
   const lsGet = (k, fallback) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* almacenamiento no disponible */ } };
@@ -528,14 +613,15 @@
 
   function toast(msg, type = 'info', ms = 4200) {
     const styles = {
-      success: 'bg-emerald-600 text-white',
-      error:   'bg-red-600 text-white',
-      warning: 'bg-amber-500 text-white',
-      info:    'bg-slate-900 text-white'
+      success: 'bg-slate-900 text-white ring-1 ring-brand-500/40',
+      error:   'bg-brand-700 text-white',
+      warning: 'bg-brand-50 text-brand-900 ring-1 ring-brand-300',
+      info:    'bg-slate-800 text-white'
     };
+    const icono = { success: '✓ ', error: '⚠ ', warning: '⚠ ', info: '' };
     const el = document.createElement('div');
     el.className = `pointer-events-auto max-w-md rounded-xl px-4 py-3 text-sm font-medium shadow-xl fade-in ${styles[type] || styles.info}`;
-    el.textContent = msg;
+    el.textContent = (icono[type] || '') + msg;
     $('#toasts').appendChild(el);
     setTimeout(() => {
       el.style.transition = 'opacity .3s'; el.style.opacity = '0';
@@ -641,7 +727,7 @@
     const target = $('#gis-button');
     target.innerHTML = '';
     google.accounts.id.renderButton(target, {
-      type: 'standard', theme: 'filled_blue', size: 'large', text: 'signin_with',
+      type: 'standard', theme: 'outline', size: 'large', text: 'signin_with',
       shape: 'pill', logo_alignment: 'left', locale: 'es', width: 280
     });
   }
@@ -677,7 +763,7 @@
   function logout() {
     lsDel(LS_SESSION);
     try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect(); } catch (e) { /* noop */ }
-    Object.assign(state, { user: null, isAdmin: false, loaded: false, directorio: [], envios: [] });
+    Object.assign(state, { user: null, isAdmin: false, loaded: false, directorio: [], envios: [], contacto: null });
     history.replaceState(null, '', location.pathname + location.search);
     showLogin();
   }
@@ -725,9 +811,9 @@
     const tabs = TABS.filter(t => !t.admin || state.isAdmin);
     $('#nav-desktop').innerHTML = tabs.map(t => `
       <button type="button" role="tab" data-tab="${t.id}" aria-selected="false"
-        class="relative inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-blue-100 transition hover:bg-white/10 hover:text-white aria-selected:bg-white aria-selected:text-brand-800 aria-selected:shadow">
+        class="relative inline-flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium text-brand-100 transition hover:bg-white/10 hover:text-white aria-selected:bg-white aria-selected:text-brand-800 aria-selected:shadow">
         <span>${t.icon}</span>${esc(t.label)}
-        <span data-badge="${t.id}" class="hidden min-w-[20px] rounded-full bg-amber-400 px-1.5 text-center text-[11px] font-bold leading-5 text-amber-950"></span>
+        <span data-badge="${t.id}" class="hidden min-w-[20px] rounded-full bg-brand-100 px-1.5 text-center text-[11px] font-bold leading-5 text-brand-900 ring-1 ring-brand-300"></span>
       </button>`).join('');
 
     const nav = $('#nav-mobile');
@@ -736,7 +822,7 @@
       <button type="button" data-tab="${t.id}" aria-selected="false"
         class="relative flex flex-col items-center justify-center gap-0.5 py-2.5 text-[11px] font-medium text-slate-500 transition aria-selected:text-brand-700">
         <span class="text-xl leading-none">${t.icon}</span>${esc(t.short)}
-        <span data-badge="${t.id}" class="absolute right-[calc(50%-24px)] top-1.5 hidden min-w-[18px] rounded-full bg-amber-400 px-1 text-center text-[10px] font-bold leading-[18px] text-amber-950"></span>
+        <span data-badge="${t.id}" class="absolute right-[calc(50%-24px)] top-1.5 hidden min-w-[18px] rounded-full bg-brand-600 px-1 text-center text-[10px] font-bold leading-[18px] text-white"></span>
       </button>`).join('');
   }
 
@@ -757,8 +843,8 @@
     const el = $('#banner');
     if (!html) { show(el, false); el.innerHTML = ''; return; }
     const styles = {
-      warning: 'border-amber-200 bg-amber-50 text-amber-900',
-      error: 'border-red-200 bg-red-50 text-red-800'
+      warning: 'border-brand-200 bg-brand-50 text-brand-900',
+      error: 'border-brand-300 bg-brand-100 text-brand-900'
     };
     el.className = `mb-5 flex flex-col gap-3 rounded-2xl border p-4 text-sm sm:flex-row sm:items-center ${styles[type] || styles.warning}`;
     el.innerHTML = `<div class="flex-1">${html}</div>` +
@@ -778,9 +864,24 @@
   }
 
   function indexEnvio(e) {
+    e.departamento = normDepto(e.departamento);
     e._q = norm([e.referencia, e.nombreDestinatario, e.correoDestinatario, e.departamento,
       e.descripcion, e.emisor, e.estado, e.nombreProveedor, e.tipoMensajeria].join(' '));
     return e;
+  }
+
+  /** Directorio: departamentos normalizados y sin correos repetidos. */
+  function prepararDirectorio(lista) {
+    const vistos = new Set();
+    return (lista || []).reduce((acc, c) => {
+      const correo = String(c.correo || '').trim().toLowerCase();
+      const nombre = String(c.nombre || '').replace(/\s+/g, ' ').trim();
+      if (!nombre || !isEmail(correo) || vistos.has(correo)) return acc;
+      vistos.add(correo);
+      const departamento = normDepto(c.departamento);
+      acc.push({ nombre, correo, departamento, _q: norm(`${nombre} ${correo} ${departamento}`) });
+      return acc;
+    }, []).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   }
 
   async function loadData({ silent = false } = {}) {
@@ -789,7 +890,7 @@
     setRefreshing(true);
     try {
       const data = await apiGet();
-      state.directorio = (data.directorio || []).map(c => Object.assign(c, { _q: norm(`${c.nombre} ${c.correo} ${c.departamento}`) }));
+      state.directorio = prepararDirectorio(data.directorio);
       state.envios = (data.envios || []).map(indexEnvio);
       state.loaded = true;
       state.lastLoad = Date.now();
@@ -812,7 +913,6 @@
 
   function renderAll() {
     renderDirectorioInfo();
-    renderDeptos();
     renderAside();
     renderPanel();
     renderRastreo();
@@ -839,9 +939,8 @@
     state.tipo = tipo === TIPOS.EXTERNA ? TIPOS.EXTERNA : TIPOS.INTERNA;
     const externa = state.tipo === TIPOS.EXTERNA;
     $$('[data-tipo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tipo === state.tipo)));
-    show($('#bloque-interna'), !externa);
     show($('#bloque-externa'), externa, 'grid');
-    $('#paso2-titulo').textContent = externa ? 'Proveedor y contacto asociado' : 'Destinatario';
+    $('#paso2-titulo').textContent = externa ? 'Proveedor y persona asociada' : 'Destinatario';
     cerrarResultados();
   }
 
@@ -850,18 +949,38 @@
     $('#dir-info').innerHTML = !state.loaded
       ? 'Cargando directorio…'
       : n
-        ? `${n} contactos disponibles. También puede escribir los datos manualmente.`
-        : (state.isAdmin
-          ? 'El directorio está vacío. Use <b>🔄 Sincronizar Contactos</b> en el Panel Operador.'
-          : 'El directorio está vacío. Escriba los datos del destinatario manualmente.');
+        ? `Escriba y elija a la persona en la lista (${n} contactos). El correo y el departamento se completan solos.`
+        : 'El directorio está vacío. Se sincroniza automáticamente cada día a las 6:00 a. m.; si persiste, contacte al administrador.';
   }
 
-  function renderDeptos() {
-    const set = new Set();
-    state.directorio.forEach(c => c.departamento && set.add(c.departamento));
-    state.envios.forEach(e => e.departamento && set.add(e.departamento));
-    $('#lista-deptos').innerHTML = Array.from(set).sort((a, b) => a.localeCompare(b, 'es'))
-      .map(d => `<option value="${esc(d)}"></option>`).join('');
+  /* ---- Destinatario: selección y datos de solo lectura -------------------- */
+  function renderContacto() {
+    const c = state.contacto;
+    $('#ro-correo').textContent = c ? c.correo : '';
+    $('#ro-depto').textContent = c ? (c.departamento || '') : '';
+    const ok = $('#contacto-ok');
+    ok.innerHTML = ico('check', 'h-5 w-5');
+    show(ok, !!c);
+  }
+
+  function seleccionarContacto(c) {
+    state.contacto = { nombre: c.nombre, correo: c.correo, departamento: normDepto(c.departamento) };
+    const input = $('#nombreDestinatario');
+    input.value = c.nombre;
+    input.classList.remove('input-error');
+    cerrarResultados();
+    renderContacto();
+    input.classList.add('border-brand-500', 'ring-4', 'ring-brand-100');
+    setTimeout(() => input.classList.remove('border-brand-500', 'ring-4', 'ring-brand-100'), 1000);
+  }
+
+  /** Si el texto coincide exactamente con un único nombre del directorio, lo selecciona. */
+  function autoSeleccionarExacto() {
+    if (state.contacto) return;
+    const v = norm($('#nombreDestinatario').value).trim();
+    if (!v) return;
+    const exactos = state.directorio.filter(c => norm(c.nombre) === v || c.correo === v);
+    if (exactos.length === 1) seleccionarContacto(exactos[0]);
   }
 
   /* ---- Destinatarios recientes ------------------------------------------- */
@@ -871,7 +990,7 @@
   function guardarReciente(c) {
     if (!isEmail(c.correo)) return;
     const lista = getRecientes().filter(r => r.correo !== c.correo);
-    lista.unshift({ nombre: c.nombre, correo: c.correo, departamento: c.departamento || '' });
+    lista.unshift({ nombre: c.nombre, correo: c.correo, departamento: normDepto(c.departamento) });
     lsSet(recentKey(), lista.slice(0, MAX_RECIENTES));
     renderRecientes();
   }
@@ -881,12 +1000,12 @@
     show($('#recientes-wrap'), lista.length > 0);
     $('#recientes').innerHTML = lista.map((c, i) => `
       <button type="button" class="chip" data-reciente="${i}" title="${esc(c.correo)}">
-        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[11px] font-bold text-brand-700">${esc(initials(c.nombre))}</span>
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-[11px] font-bold text-brand-800">${esc(initials(c.nombre))}</span>
         <span class="max-w-[160px] truncate">${esc(c.nombre)}</span>
       </button>`).join('');
   }
 
-  /* ---- Buscador predictivo ----------------------------------------------- */
+  /* ---- Autocompletado predictivo sobre "Nombre del destinatario" ----------- */
   function buscarDirectorio(q) {
     const terms = norm(q).trim().split(/\s+/).filter(Boolean);
     if (!terms.length) return [];
@@ -900,21 +1019,22 @@
     const idx = norm(text).indexOf(t);
     if (idx < 0) return safe;
     const raw = String(text);
-    return esc(raw.slice(0, idx)) + '<mark class="rounded bg-yellow-100 px-0.5 text-inherit">' + esc(raw.slice(idx, idx + t.length)) + '</mark>' + esc(raw.slice(idx + t.length));
+    return esc(raw.slice(0, idx)) + '<mark class="rounded bg-brand-100 px-0.5 text-brand-900">' + esc(raw.slice(idx, idx + t.length)) + '</mark>' + esc(raw.slice(idx + t.length));
   }
 
   function renderResultados() {
-    const q = $('#buscador').value;
+    const input = $('#nombreDestinatario');
+    const q = input.value;
     const ul = $('#resultados');
     state.resultados = buscarDirectorio(q);
-    if (!q.trim()) { cerrarResultados(); return; }
+    if (!q.trim() || state.contacto) { cerrarResultados(); return; }
     if (!state.resultados.length) {
-      ul.innerHTML = `<li class="px-4 py-3 text-sm text-slate-500">Sin coincidencias. Puede escribir los datos manualmente abajo.</li>`;
+      ul.innerHTML = `<li class="px-4 py-3 text-sm text-slate-500">${state.directorio.length ? 'Sin coincidencias en el directorio.' : 'Directorio no disponible todavía.'}</li>`;
     } else {
       ul.innerHTML = state.resultados.map((c, i) => `
         <li role="option" data-contacto="${i}" aria-selected="${i === state.activeIdx}"
             class="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition hover:bg-slate-50 aria-selected:bg-brand-50">
-          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">${esc(initials(c.nombre))}</span>
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-800">${esc(initials(c.nombre))}</span>
           <span class="min-w-0 flex-1">
             <span class="block truncate text-sm font-semibold text-slate-900">${resaltar(c.nombre, q)}</span>
             <span class="block truncate text-xs text-slate-500">${resaltar(c.correo, q)}</span>
@@ -923,74 +1043,74 @@
         </li>`).join('');
     }
     show(ul, true);
-    $('#buscador').setAttribute('aria-expanded', 'true');
+    input.setAttribute('aria-expanded', 'true');
   }
 
   function cerrarResultados() {
     show($('#resultados'), false);
-    $('#buscador').setAttribute('aria-expanded', 'false');
+    $('#nombreDestinatario').setAttribute('aria-expanded', 'false');
     state.activeIdx = -1;
   }
 
-  function seleccionarContacto(c) {
-    $('#nombreDestinatario').value = c.nombre || '';
-    $('#correoDestinatario').value = c.correo || '';
-    $('#departamento').value = c.departamento || '';
-    $('#buscador').value = '';
-    cerrarResultados();
-    ['nombreDestinatario', 'correoDestinatario', 'departamento'].forEach(id => {
-      const el = $('#' + id);
-      el.classList.remove('input-error');
-      el.classList.add('ring-4', 'ring-emerald-100', 'border-emerald-400');
-      setTimeout(() => el.classList.remove('ring-4', 'ring-emerald-100', 'border-emerald-400'), 1200);
-    });
+  /* ---- Descripción rápida (Top 5) ----------------------------------------- */
+  function renderDescChips() {
+    const chips = (DESC_CHIPS && DESC_CHIPS.length ? DESC_CHIPS : DESC_CHIPS_GENERALES).slice(0, 5);
+    $('#desc-chips').innerHTML = chips.map(d =>
+      `<button type="button" class="chip text-xs" data-desc="${esc(d)}" aria-pressed="false">${esc(d)}</button>`).join('');
+    actualizarChipsDesc();
   }
 
-  /* ---- Descripción rápida ------------------------------------------------- */
-  function renderDescChips() {
-    $('#desc-chips').innerHTML = DESC_CHIPS.map(d =>
-      `<button type="button" class="chip text-xs" data-desc="${esc(d)}">+ ${esc(d)}</button>`).join('');
+  function actualizarChipsDesc() {
+    const actual = norm($('#descripcion').value);
+    $$('[data-desc]').forEach(b => b.setAttribute('aria-pressed', String(actual.includes(norm(b.dataset.desc)))));
   }
 
   function agregarDescripcion(texto) {
     const ta = $('#descripcion');
     const actual = ta.value.trim();
-    if (norm(actual).includes(norm(texto))) return;
-    ta.value = actual ? `${actual}, ${texto}` : texto;
+    if (norm(actual).includes(norm(texto))) {
+      // Segundo toque: quita el chip de la descripción
+      const partes = actual.split(/\s*,\s*/).filter(p => norm(p) !== norm(texto));
+      ta.value = partes.join(', ');
+    } else {
+      ta.value = actual ? `${actual}, ${texto}` : texto;
+    }
     ta.classList.remove('input-error');
+    actualizarChipsDesc();
     ta.focus();
   }
 
-  /* ---- Foto: compresión con canvas ---------------------------------------- */
-  function comprimirImagen(file) {
+  /* ---- Foto: compresión común con canvas ---------------------------------- */
+  /** Dibuja una fuente (imagen o video) en un canvas de máx. FOTO_MAX_W px y devuelve JPEG Base64. */
+  function aJpegComprimido(fuente, anchoOrig, altoOrig) {
+    const scale = Math.min(1, FOTO_MAX_W / anchoOrig);
+    const w = Math.round(anchoOrig * scale);
+    const h = Math.round(altoOrig * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';            // fondo blanco para PNG transparentes
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(fuente, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', FOTO_QUALITY);
+    return { dataUrl, w, h, kb: Math.round((dataUrl.length - 23) * 3 / 4 / 1024) };
+  }
+
+  function comprimirArchivo(file) {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
-        try {
-          const scale = Math.min(1, FOTO_MAX_W / img.naturalWidth);
-          const w = Math.round(img.naturalWidth * scale);
-          const h = Math.round(img.naturalHeight * scale);
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#ffffff';            // fondo blanco para PNG transparentes
-          ctx.fillRect(0, 0, w, h);
-          ctx.drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', FOTO_QUALITY);
-          resolve({ dataUrl, w, h, kb: Math.round((dataUrl.length - 23) * 3 / 4 / 1024) });
-        } catch (err) {
-          reject(err);
-        } finally {
-          URL.revokeObjectURL(url);
-        }
+        try { resolve(aJpegComprimido(img, img.naturalWidth, img.naturalHeight)); }
+        catch (err) { reject(err); }
+        finally { URL.revokeObjectURL(url); }
       };
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Formato de imagen no soportado.')); };
       img.src = url;
     });
   }
 
-  async function manejarFoto(input) {
+  async function manejarArchivo(input) {
     const file = input.files && input.files[0];
     input.value = '';
     if (!file) return;
@@ -998,15 +1118,14 @@
     show($('#foto-vacia'), false, 'grid');
     show($('#foto-procesando'), true, 'flex');
     try {
-      state.foto = await comprimirImagen(file);
-      renderFoto();
+      state.foto = await comprimirArchivo(file);
     } catch (err) {
       console.error(err);
       state.foto = null;
-      renderFoto();
       toast('No se pudo procesar la imagen. Intente con otra foto (JPG o PNG).', 'error');
     } finally {
       show($('#foto-procesando'), false, 'flex');
+      renderFoto();
     }
   }
 
@@ -1022,14 +1141,116 @@
     }
   }
 
+  /* ---- Cámara nativa (getUserMedia) --------------------------------------- */
+  function camEstado(html) {
+    const el = $('#cam-estado');
+    el.innerHTML = html || '';
+    show(el, !!html, 'flex');
+  }
+
+  async function abrirCamara() {
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+      // Navegador sin soporte (o página sin HTTPS): usa la cámara del sistema
+      $('#foto-camara-nativa').click();
+      return;
+    }
+    show($('#camara-modal'), true, 'flex');
+    document.body.style.overflow = 'hidden';
+    $('#cam-tomar').disabled = true;
+    camEstado('<span class="spinner h-8 w-8 text-white/70"></span><span>Iniciando cámara…</span>');
+    try {
+      await iniciarStream();
+    } catch (err) {
+      console.error(err);
+      const msg = {
+        NotAllowedError: 'Permiso de cámara denegado. Habilítelo en la configuración del navegador o use "Subir archivo".',
+        SecurityError: 'El navegador bloqueó la cámara. Use "Subir archivo".',
+        NotFoundError: 'No se encontró ninguna cámara en este equipo. Use "Subir archivo".',
+        NotReadableError: 'La cámara está siendo usada por otra aplicación. Ciérrela e intente de nuevo.'
+      }[err && err.name] || 'No se pudo abrir la cámara. Use "Subir archivo".';
+      camEstado(`<span class="text-3xl">📷</span><span class="max-w-sm">${esc(msg)}</span>
+        <button type="button" data-cam-cerrar class="mt-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-brand-800">Entendido</button>`);
+    }
+  }
+
+  async function iniciarStream() {
+    detenerStream();
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: state.cam.facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false
+      });
+    } catch (err) {
+      if (err && (err.name === 'OverconstrainedError' || err.name === 'NotFoundError')) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });  // webcam genérica de PC
+      } else {
+        throw err;
+      }
+    }
+    state.cam.stream = stream;
+    const video = $('#cam-video');
+    video.srcObject = stream;
+    const ajustes = stream.getVideoTracks()[0].getSettings ? stream.getVideoTracks()[0].getSettings() : {};
+    video.classList.toggle('mirror', ajustes.facingMode === 'user' || (!ajustes.facingMode && state.cam.facing === 'user'));
+    await new Promise(res => { if (video.readyState >= 1) res(); else video.onloadedmetadata = () => res(); });
+    try { await video.play(); } catch (e) { /* autoplay ya activo */ }
+    camEstado('');
+    $('#cam-tomar').disabled = false;
+
+    try {
+      const dispositivos = await navigator.mediaDevices.enumerateDevices();
+      const camaras = dispositivos.filter(d => d.kind === 'videoinput').length;
+      $('#cam-cambiar').classList.toggle('invisible', camaras < 2);
+    } catch (e) { /* noop */ }
+  }
+
+  function detenerStream() {
+    if (state.cam.stream) {
+      state.cam.stream.getTracks().forEach(t => t.stop());
+      state.cam.stream = null;
+    }
+    const video = $('#cam-video');
+    if (video) video.srcObject = null;
+  }
+
+  function cerrarCamara() {
+    detenerStream();
+    show($('#camara-modal'), false, 'flex');
+    document.body.style.overflow = '';
+  }
+
+  async function cambiarCamara() {
+    state.cam.facing = state.cam.facing === 'environment' ? 'user' : 'environment';
+    $('#cam-tomar').disabled = true;
+    camEstado('<span class="spinner h-8 w-8 text-white/70"></span><span>Cambiando cámara…</span>');
+    try { await iniciarStream(); }
+    catch (err) { console.error(err); camEstado(''); toast('No se pudo cambiar de cámara.', 'warning'); }
+  }
+
+  function tomarFoto() {
+    const video = $('#cam-video');
+    if (!video.videoWidth) { toast('La cámara aún no está lista.', 'warning'); return; }
+    try {
+      state.foto = aJpegComprimido(video, video.videoWidth, video.videoHeight);
+      renderFoto();
+      cerrarCamara();
+      toast(`Foto capturada (${state.foto.kb} KB).`, 'success');
+    } catch (err) {
+      console.error(err);
+      toast('No se pudo capturar la foto.', 'error');
+    }
+  }
+
   /* ---- Validación y envío ------------------------------------------------- */
   function valoresFormulario() {
     const externa = state.tipo === TIPOS.EXTERNA;
+    const c = state.contacto;
     return {
       tipoMensajeria: state.tipo,
       nombreDestinatario: $('#nombreDestinatario').value.trim(),
-      correoDestinatario: $('#correoDestinatario').value.trim().toLowerCase(),
-      departamento: $('#departamento').value.trim(),
+      correoDestinatario: c ? c.correo : '',
+      departamento: c ? (c.departamento || '') : '',
       descripcion: $('#descripcion').value.trim(),
       nombreProveedor: externa ? $('#nombreProveedor').value.trim() : '',
       correoProveedor: externa ? $('#correoProveedor').value.trim().toLowerCase() : ''
@@ -1045,8 +1266,8 @@
       if (!v.nombreProveedor) marcar('nombreProveedor', 'El nombre del proveedor es obligatorio.');
       if (v.correoProveedor && !isEmail(v.correoProveedor)) marcar('correoProveedor', 'El correo del proveedor no es válido.');
     }
-    if (!v.nombreDestinatario) marcar('nombreDestinatario', 'El nombre del destinatario es obligatorio.');
-    if (!isEmail(v.correoDestinatario)) marcar('correoDestinatario', 'Ingrese un correo de destinatario válido.');
+    if (!v.nombreDestinatario) marcar('nombreDestinatario', 'Escriba el nombre del destinatario.');
+    else if (!isEmail(v.correoDestinatario)) marcar('nombreDestinatario', 'Elija al destinatario en la lista del directorio para completar su correo.');
     if (!v.descripcion) marcar('descripcion', 'La descripción de la correspondencia es obligatoria.');
     return errores;
   }
@@ -1072,6 +1293,7 @@
 
     if (!isApiConfigured()) { mostrarErrorForm('Falta configurar <b>APPS_SCRIPT_URL</b> en index.html.'); return; }
 
+    autoSeleccionarExacto();
     const v = valoresFormulario();
     const errores = validar(v);
     if (errores.length) {
@@ -1091,9 +1313,7 @@
       });
       const r = await apiPost(payload);
 
-      if (v.tipoMensajeria === TIPOS.INTERNA) {
-        guardarReciente({ nombre: v.nombreDestinatario, correo: v.correoDestinatario, departamento: v.departamento });
-      }
+      guardarReciente({ nombre: v.nombreDestinatario, correo: v.correoDestinatario, departamento: v.departamento });
       mostrarConfirmacion(r, v);
       resetFormulario();
       loadData({ silent: true });
@@ -1110,8 +1330,11 @@
   function resetFormulario() {
     $('#form-envio').reset();
     state.foto = null;
+    state.contacto = null;
     renderFoto();
+    renderContacto();
     setTipo(TIPOS.INTERNA);
+    actualizarChipsDesc();
     $$('#form-envio .input-error').forEach(el => el.classList.remove('input-error'));
     mostrarErrorForm('');
   }
@@ -1119,21 +1342,21 @@
   function mostrarConfirmacion(r, v) {
     const correo = r.correo || {};
     const aviso = correo.enviado
-      ? `<p class="flex items-center justify-center gap-2 text-sm text-emerald-700">${ico('check', 'h-4 w-4')} Se notificó por correo a ${esc(v.correoDestinatario)}</p>`
-      : `<p class="text-sm text-amber-700">No se envió notificación por correo${correo.motivo || correo.error ? ': ' + esc(correo.motivo || correo.error) : '.'}</p>`;
+      ? `<p class="flex items-center justify-center gap-2 text-sm text-slate-700"><span class="text-brand-600">${ico('check', 'h-4 w-4')}</span> Se notificó por correo a ${esc(v.correoDestinatario)}</p>`
+      : `<p class="text-sm text-brand-800">No se envió notificación por correo${correo.motivo || correo.error ? ': ' + esc(correo.motivo || correo.error) : '.'}</p>`;
 
     const box = $('#nuevo-confirmacion');
     box.innerHTML = `
-      <div class="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-lg fade-in">
-        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 px-6 py-8 text-center text-white">
+      <div class="overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-lg fade-in">
+        <div class="bg-gradient-to-br from-brand-600 to-brand-800 px-6 py-8 text-center text-white">
           <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/20 pop-in">${ico('check', 'h-8 w-8')}</div>
           <h2 class="mt-3 text-xl font-bold">¡Envío registrado con éxito!</h2>
-          <p class="text-sm text-emerald-50">${esc(fmtDate(r.marcaTemporal) || fmtDate(new Date()))}</p>
+          <p class="text-sm text-brand-100">${esc(fmtDate(r.marcaTemporal) || fmtDate(new Date()))}</p>
         </div>
         <div class="px-6 py-8 text-center sm:px-10">
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Código de referencia</p>
-          <div class="pop-in mx-auto mt-3 inline-block rounded-2xl border-4 border-dashed border-emerald-400 bg-emerald-50 px-6 py-4 sm:px-10">
-            <span class="font-mono text-6xl font-extrabold tracking-[0.12em] text-slate-900 sm:text-7xl">#${esc(r.referencia)}</span>
+          <div class="pop-in mx-auto mt-3 inline-block rounded-2xl border-4 border-dashed border-brand-400 bg-brand-50 px-6 py-4 sm:px-10">
+            <span class="font-mono text-6xl font-extrabold tracking-[0.12em] text-brand-900 sm:text-7xl">${esc(fmtRef(r.referencia))}</span>
           </div>
           <p class="mx-auto mt-5 max-w-md text-lg font-semibold text-slate-800">Anote este número de 5 dígitos en el paquete o sobre</p>
           <div class="mx-auto mt-6 max-w-md space-y-1 rounded-2xl bg-slate-50 p-4 text-left text-sm">
@@ -1144,7 +1367,7 @@
           </div>
           <div class="mt-4">${aviso}</div>
           <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <button type="button" data-copiar="${esc(r.referencia)}" class="btn-secondary">${ico('copy', 'h-4 w-4')} Copiar código</button>
+            <button type="button" data-copiar="${esc(fmtRef(r.referencia))}" class="btn-secondary">${ico('copy', 'h-4 w-4')} Copiar código</button>
             <button type="button" data-tab="rastreo" class="btn-secondary">📍 Ver en Mis Envíos</button>
             <button type="button" id="btn-otro" class="btn-primary">✉️ Registrar otro envío</button>
           </div>
@@ -1167,8 +1390,8 @@
     const me = state.user.email;
     const mios = state.envios.filter(e => e.emisor === me).slice(0, 5);
     cont.innerHTML = mios.length ? mios.map(e => `
-      <button type="button" data-ir-ref="${esc(e.referencia)}" class="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-50">
-        <span class="font-mono text-sm font-extrabold text-slate-900">#${esc(e.referencia)}</span>
+      <button type="button" data-ir-ref="${esc(e.referencia)}" class="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-brand-50">
+        <span class="font-mono text-sm font-extrabold text-slate-900">${esc(fmtRef(e.referencia))}</span>
         <span class="min-w-0 flex-1 truncate text-sm text-slate-600">${esc(e.nombreDestinatario)}</span>
         ${badge(e.estado, true)}
       </button>`).join('')
@@ -1189,10 +1412,10 @@
     if (!e.foto) {
       return `<div class="${size} flex shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-slate-100 text-slate-400">${ico('image', 'h-6 w-6')}<span class="text-[10px]">Sin foto</span></div>`;
     }
-    return `<button type="button" data-lightbox="${esc(e.foto)}" data-caption="Ref. #${esc(e.referencia)} · ${esc(e.nombreDestinatario)}"
+    return `<button type="button" data-lightbox="${esc(e.foto)}" data-caption="Ref. ${esc(fmtRef(e.referencia))} · ${esc(e.nombreDestinatario)}"
         class="${size} group relative shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 focus:outline-none focus:ring-4 focus:ring-brand-100" title="Ampliar foto">
-        <img src="${esc(e.foto)}" alt="Foto del paquete #${esc(e.referencia)}" loading="lazy" referrerpolicy="no-referrer"
-             onerror="this.parentElement.classList.add('img-error');this.remove();"
+        <img src="${esc(e.foto)}" alt="Foto del paquete ${esc(fmtRef(e.referencia))}" loading="lazy" referrerpolicy="no-referrer"
+             onerror="this.remove();"
              class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
         <span class="absolute inset-0 flex items-center justify-center bg-slate-900/0 text-white opacity-0 transition group-hover:bg-slate-900/30 group-hover:opacity-100">${ico('search', 'h-6 w-6')}</span>
       </button>`;
@@ -1214,7 +1437,7 @@
 
   function estadoVacio(titulo, texto) {
     return `<div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
-      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">${ico('inbox', 'h-6 w-6')}</div>
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-400">${ico('inbox', 'h-6 w-6')}</div>
       <p class="mt-3 font-semibold text-slate-700">${esc(titulo)}</p>
       <p class="mt-1 text-sm text-slate-500">${esc(texto)}</p></div>`;
   }
@@ -1264,22 +1487,22 @@
         <div class="mt-1 text-2xl font-bold text-slate-900">${n}</div>
       </div>`;
     $('#panel-stats').innerHTML =
-      stat('Por recibir (Registrado)', c['Registrado'], 'bg-slate-500') +
-      stat('Recibidos', c['Recibido'], 'bg-indigo-600') +
-      stat('En camino', c['En Camino'], 'bg-amber-500') +
-      stat('Entregados hoy', hoy, 'bg-emerald-600');
+      stat('Por recibir (Registrado)', c['Registrado'], 'bg-slate-400') +
+      stat('Recibidos', c['Recibido'], 'bg-brand-300') +
+      stat('En camino', c['En Camino'], 'bg-brand-600') +
+      stat('Entregados hoy', hoy, 'bg-brand-900');
 
     // Filtros
     const q = norm($('#panel-search').value).trim();
-    const terms = q.split(/\s+/).filter(Boolean);
+    const terms = q.split(/\s+/).filter(Boolean).map(t => t.replace(/^#/, '')).filter(Boolean);
     let items = state.envios.filter(e => {
       if (state.panelFilter === 'activos' && e.estado === 'Entregado') return false;
       if (state.panelFilter === 'entregados' && e.estado !== 'Entregado') return false;
-      return terms.every(t => e._q.includes(t.replace(/^#/, '')));
+      return terms.every(t => e._q.includes(t));
     });
 
     // Coincidencia exacta de código primero
-    if (/^#?\d{5}$/.test(q)) {
+    if (/^#?\d{3,5}$/.test(q)) {
       const ref = q.replace('#', '');
       items.sort((a, b) => (b.referencia === ref) - (a.referencia === ref));
     }
@@ -1291,7 +1514,7 @@
       ? items.map(tarjetaPanel).join('')
       : estadoVacio(
           q ? 'Sin resultados' : (state.panelFilter === 'activos' ? 'No hay envíos activos' : 'No hay envíos'),
-          q ? 'Pruebe con otro código, nombre o departamento.' : 'Cuando se registren nuevos envíos aparecerán aquí.'
+          q ? 'Pruebe con otro código (#10000), nombre o departamento.' : 'Cuando se registren nuevos envíos aparecerán aquí.'
         );
 
     more.innerHTML = total > items.length
@@ -1306,7 +1529,7 @@
 
     const pie = entregado
       ? `<div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-           <span class="text-emerald-700">✅ Entregado ${esc(fmtDate(e.entregado))}</span>
+           <span class="font-medium text-brand-800">✅ Entregado ${esc(fmtDate(e.entregado))}</span>
            ${e.duracion ? `<span class="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">${ico('clock', 'h-3.5 w-3.5')} ${esc(e.duracion)}</span>` : ''}
          </div>`
       : `<div class="grid grid-cols-3 gap-2">${botonesEstado(e, busy)}</div>`;
@@ -1317,7 +1540,7 @@
           ${miniatura(e)}
           <div class="min-w-0 flex-1">
             <div class="flex items-start justify-between gap-2">
-              <div class="font-mono text-[28px] font-extrabold leading-none tracking-wider text-slate-900">#${esc(e.referencia)}</div>
+              <div class="font-mono text-[28px] font-extrabold leading-none tracking-wider text-slate-900">${esc(fmtRef(e.referencia))}</div>
               ${badge(e.estado)}
             </div>
             <div class="mt-2 truncate font-semibold text-slate-900" title="${esc(e.correoDestinatario)}">${esc(e.nombreDestinatario || e.correoDestinatario)}</div>
@@ -1328,13 +1551,14 @@
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pb-3 text-xs text-slate-500">
           <span class="truncate">De: ${esc(e.emisor)}</span>
           <span title="${esc(fmtDate(e.marcaTemporal))}">· ${esc(timeAgo(e.marcaTemporal))}</span>
-          ${externa ? `<span class="rounded-md bg-amber-50 px-1.5 py-0.5 font-medium text-amber-800 ring-1 ring-amber-200">Externa${e.nombreProveedor ? ' · ' + esc(e.nombreProveedor) : ''}</span>` : ''}
-          ${e.mapsUrl ? `<a href="${esc(e.mapsUrl)}" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 font-medium text-brand-600 hover:underline">${ico('pin', 'h-3.5 w-3.5')}GPS</a>` : ''}
+          ${externa ? `<span class="rounded-md bg-brand-50 px-1.5 py-0.5 font-medium text-brand-800 ring-1 ring-brand-200">Externa${e.nombreProveedor ? ' · ' + esc(e.nombreProveedor) : ''}</span>` : ''}
+          ${e.mapsUrl ? `<a href="${esc(e.mapsUrl)}" target="_blank" rel="noopener" class="inline-flex items-center gap-0.5 font-medium text-brand-700 hover:underline">${ico('pin', 'h-3.5 w-3.5')}GPS</a>` : ''}
         </div>
         <div class="mt-auto border-t border-slate-100 bg-slate-50/80 p-3">${pie}</div>
       </article>`;
   }
 
+  /** Botones de un toque: el siguiente paso resaltado; los ya cumplidos, deshabilitados. */
   function botonesEstado(e, busy) {
     const rank = rankOf(e.estado);
     return ACCIONES.map((a, i) => {
@@ -1346,12 +1570,12 @@
       const estilo = hecho
         ? 'border-transparent bg-slate-100 text-slate-400'
         : siguiente
-          ? `border-transparent shadow-sm ${a.solid}`
-          : `bg-white ${a.outline}`;
+          ? 'border-transparent bg-brand-700 text-white shadow-sm hover:bg-brand-800'
+          : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50';
       const contenido = cargando
         ? `<span class="spinner"></span><span>${busy.phase === 'gps' ? 'GPS…' : 'Guardando…'}</span>`
         : `<span class="text-base leading-none">${hecho ? '✓' : a.emoji}</span><span>${a.estado}</span>`;
-      const titulo = hecho ? `Ya está en "${e.estado}"` : `Marcar como ${a.estado}`;
+      const titulo = hecho ? `Ya está en "${e.estado}"` : `Marcar ${fmtRef(e.referencia)} como ${a.estado}`;
       return `<button type="button" data-estado="${a.estado}" data-ref="${esc(e.referencia)}" ${disabled ? 'disabled' : ''} title="${esc(titulo)}"
         class="flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-xs font-semibold transition sm:flex-row sm:gap-1.5 sm:text-[13px] disabled:cursor-not-allowed ${busy && !cargando ? 'opacity-50' : ''} ${estilo}">${contenido}</button>`;
     }).join('');
@@ -1382,7 +1606,7 @@
     if (!env) return;
 
     if (estado === 'Entregado' &&
-        !confirm(`¿Confirmar la ENTREGA del envío #${referencia} a ${env.nombreDestinatario || env.correoDestinatario}?\n\nEsta acción no se puede deshacer.`)) {
+        !confirm(`¿Confirmar la ENTREGA del envío ${fmtRef(referencia)} a ${env.nombreDestinatario || env.correoDestinatario}?\n\nEsta acción no se puede deshacer.`)) {
       return;
     }
 
@@ -1398,9 +1622,9 @@
       if (r.envio) reemplazarEnvio(r.envio);
 
       if (r.unchanged) {
-        toast(r.mensaje || `El envío #${referencia} ya estaba en "${estado}".`, 'info');
+        toast(r.mensaje || `El envío ${fmtRef(referencia)} ya estaba en "${estado}".`, 'info');
       } else {
-        toast(`#${referencia} → ${estado}${gps ? ' · 📍 GPS guardado' : ' · sin ubicación GPS'}`, 'success');
+        toast(`${fmtRef(referencia)} → ${estado}${gps ? ' · 📍 GPS guardado' : ' · sin ubicación GPS'}`, 'success');
         if (r.correo && r.correo.enviado === false && r.correo.error) {
           toast('El estado se guardó, pero el correo no se pudo enviar.', 'warning');
         }
@@ -1424,24 +1648,6 @@
     if (i >= 0) state.envios[i] = nuevo; else state.envios.unshift(nuevo);
   }
 
-  async function sincronizarContactos() {
-    const btn = $('#btn-sync');
-    if (btn.disabled) return;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Sincronizando…';
-    try {
-      const r = await apiPost({ action: 'syncContacts', userEmail: state.user.email });
-      toast(`Directorio sincronizado: ${r.importados} contactos importados.`, 'success');
-      await loadData({ silent: true });
-    } catch (err) {
-      console.error(err);
-      toast('Error al sincronizar contactos: ' + err.message, 'error', 6000);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '🔄 Sincronizar Contactos';
-    }
-  }
-
   /* ==========================================================================
    *  MIS ENVÍOS (RASTREO)
    * ======================================================================== */
@@ -1452,8 +1658,8 @@
     if (!state.loaded) { cont.innerHTML = `<div class="grid gap-4 lg:grid-cols-2">${skeletonCards(2)}</div>`; return; }
 
     const me = state.user.email;
-    const terms = norm($('#rastreo-search').value).trim().split(/\s+/).filter(Boolean)
-      .map(t => t.replace(/^#/, ''));
+    const terms = norm($('#rastreo-search').value).trim().split(/\s+/)
+      .map(t => t.replace(/^#/, '')).filter(Boolean);
     const coincide = e => terms.every(t => e._q.includes(t));
 
     const enviados = state.envios.filter(e => e.emisor === me && coincide(e));
@@ -1493,21 +1699,21 @@
           ${miniatura(e, 'h-20 w-20 sm:h-24 sm:w-24')}
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="font-mono text-2xl font-extrabold tracking-wider text-slate-900">#${esc(e.referencia)}</span>
+              <span class="font-mono text-2xl font-extrabold tracking-wider text-slate-900">${esc(fmtRef(e.referencia))}</span>
               ${badge(e.estado)}
             </div>
             <p class="mt-1.5 line-clamp-2 font-medium text-slate-800">${esc(e.descripcion)}</p>
             <p class="mt-1 truncate text-sm">${contraparte}</p>
-            ${e.tipoMensajeria === TIPOS.EXTERNA ? `<p class="mt-1 text-xs text-amber-800">Externa${e.nombreProveedor ? ' · ' + esc(e.nombreProveedor) : ''}</p>` : ''}
+            ${e.tipoMensajeria === TIPOS.EXTERNA ? `<p class="mt-1 text-xs text-brand-800">Externa${e.nombreProveedor ? ' · ' + esc(e.nombreProveedor) : ''}</p>` : ''}
           </div>
         </div>
         <div class="px-5 pb-5">${lineaTiempo(e)}</div>
         <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-5 py-3 text-sm">
           ${entregado && e.duracion
-            ? `<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">${ico('clock', 'h-3.5 w-3.5')} Duración de entrega: ${esc(e.duracion)}</span>`
+            ? `<span class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-800 ring-1 ring-brand-200">${ico('clock', 'h-3.5 w-3.5')} Duración de entrega: ${esc(e.duracion)}</span>`
             : !entregado ? `<span class="inline-flex items-center gap-1.5 text-xs text-slate-500">${ico('clock', 'h-3.5 w-3.5')} Registrado ${esc(timeAgo(e.marcaTemporal))}</span>` : ''}
           ${e.mapsUrl
-            ? `<a href="${esc(e.mapsUrl)}" target="_blank" rel="noopener" class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700">${ico('pin', 'h-4 w-4')} Ver ubicación en Google Maps</a>`
+            ? `<a href="${esc(e.mapsUrl)}" target="_blank" rel="noopener" class="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-800">${ico('pin', 'h-4 w-4')} Ver ubicación en Google Maps</a>`
             : ''}
         </div>
       </article>`;
@@ -1517,7 +1723,7 @@
     const rank = rankOf(e.estado);
     const entregado = e.estado === 'Entregado';
     const fechas = [e.marcaTemporal, e.recibido, '', e.entregado];
-    const color = entregado ? 'bg-emerald-500' : 'bg-brand-600';
+    const color = entregado ? 'bg-brand-800' : 'bg-brand-600';
 
     return `<ol class="grid grid-cols-4">${ESTADOS.map((paso, i) => {
       const alcanzado = i <= rank;
@@ -1553,6 +1759,7 @@
       if (lb) { abrirLightbox(lb.dataset.lightbox, lb.dataset.caption); return; }
 
       if (t.closest('[data-close-lightbox]') || t.id === 'lightbox') { cerrarLightbox(); return; }
+      if (t.closest('[data-cam-cerrar]')) { cerrarCamara(); return; }
 
       const st = t.closest('[data-estado][data-ref]');
       if (st && !st.disabled) { cambiarEstado(st.dataset.ref, st.dataset.estado); return; }
@@ -1586,36 +1793,45 @@
       }
 
       const ir = t.closest('[data-ir-ref]');
-      if (ir) { $('#rastreo-search').value = ir.dataset.irRef; renderRastreo(); go('rastreo'); return; }
+      if (ir) { $('#rastreo-search').value = fmtRef(ir.dataset.irRef); renderRastreo(); go('rastreo'); return; }
 
       const cp = t.closest('[data-copiar]');
       if (cp) {
         const txt = cp.dataset.copiar;
         (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
-          .then(() => toast(`Código #${txt} copiado.`, 'success'))
-          .catch(() => toast(`Código: #${txt}`, 'info'));
+          .then(() => toast(`Código ${txt} copiado.`, 'success'))
+          .catch(() => toast(`Código: ${txt}`, 'info'));
         return;
       }
 
       if (t.closest('#btn-otro')) { registrarOtro(); return; }
       if (t.closest('#btn-mas')) { state.panelLimit += PAGE_SIZE; renderPanel(); return; }
 
-      // Cerrar resultados del buscador al hacer clic fuera
-      if (!t.closest('#resultados') && t.id !== 'buscador') cerrarResultados();
+      // Cerrar el autocompletado al hacer clic fuera
+      if (!t.closest('#resultados') && t.id !== 'nombreDestinatario') cerrarResultados();
     });
 
     $('#btn-logout').addEventListener('click', logout);
-    $('#btn-sync').addEventListener('click', sincronizarContactos);
 
-    // Buscador predictivo
-    const buscador = $('#buscador');
-    buscador.addEventListener('input', () => { state.activeIdx = -1; renderResultados(); });
-    buscador.addEventListener('focus', () => { if (buscador.value.trim()) renderResultados(); });
-    buscador.addEventListener('keydown', (ev) => {
+    // Autocompletado del destinatario
+    const nombre = $('#nombreDestinatario');
+    nombre.addEventListener('input', () => {
+      // Al editar el nombre se descarta la selección previa (correo/depto se vacían)
+      if (state.contacto && nombre.value !== state.contacto.nombre) {
+        state.contacto = null;
+        renderContacto();
+      }
+      state.activeIdx = -1;
+      renderResultados();
+    });
+    nombre.addEventListener('focus', () => { if (nombre.value.trim() && !state.contacto) renderResultados(); });
+    nombre.addEventListener('blur', () => setTimeout(autoSeleccionarExacto, 150));
+    nombre.addEventListener('keydown', (ev) => {
       const n = state.resultados.length;
+      const abierto = !$('#resultados').classList.contains('hidden');
       if (ev.key === 'ArrowDown' && n) { ev.preventDefault(); state.activeIdx = (state.activeIdx + 1) % n; renderResultados(); }
       else if (ev.key === 'ArrowUp' && n) { ev.preventDefault(); state.activeIdx = (state.activeIdx - 1 + n) % n; renderResultados(); }
-      else if (ev.key === 'Enter') {
+      else if (ev.key === 'Enter' && abierto) {
         ev.preventDefault();
         if (n) seleccionarContacto(state.resultados[Math.max(0, state.activeIdx)]);
       }
@@ -1630,12 +1846,16 @@
     // Limpia el estado de error al escribir
     $('#form-envio').addEventListener('input', (ev) => {
       if (ev.target.classList.contains('input-error')) ev.target.classList.remove('input-error');
+      if (ev.target.id === 'descripcion') actualizarChipsDesc();
     });
     $('#form-envio').addEventListener('submit', enviarFormulario);
 
-    // Foto
-    $('#foto-camara').addEventListener('change', (ev) => manejarFoto(ev.target));
-    $('#foto-archivo').addEventListener('change', (ev) => manejarFoto(ev.target));
+    // Foto: cámara nativa + archivo
+    $('#btn-abrir-camara').addEventListener('click', abrirCamara);
+    $('#cam-tomar').addEventListener('click', tomarFoto);
+    $('#cam-cambiar').addEventListener('click', cambiarCamara);
+    $('#foto-archivo').addEventListener('change', (ev) => manejarArchivo(ev.target));
+    $('#foto-camara-nativa').addEventListener('change', (ev) => manejarArchivo(ev.target));
     $('#foto-quitar').addEventListener('click', () => { state.foto = null; renderFoto(); });
 
     // Filtros
@@ -1648,13 +1868,20 @@
       if (state.user && TABS.some(t => t.id === tab)) go(tab, { replace: true });
     });
 
-    // Teclado: cerrar visor
-    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') cerrarLightbox(); });
+    // Teclado: cerrar visor / cámara
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (!$('#camara-modal').classList.contains('hidden')) cerrarCamara();
+      else cerrarLightbox();
+    });
 
-    // Refresco silencioso al volver a la pestaña o cada 2 minutos
+    // Libera la cámara si la pestaña se oculta
     document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && state.cam.stream) cerrarCamara();
       if (document.visibilityState === 'visible' && state.user && Date.now() - state.lastLoad > 60000) loadData({ silent: true });
     });
+
+    // Refresco silencioso cada 2 minutos
     setInterval(() => {
       if (document.visibilityState === 'visible' && state.user && state.loaded && !state.busy.size && !state.submitting) {
         loadData({ silent: true });
@@ -1669,6 +1896,7 @@
   (function boot() {
     hydrateIcons();
     renderDescChips();
+    renderContacto();
     wireEvents();
     setTipo(TIPOS.INTERNA);
     const session = loadSession();
